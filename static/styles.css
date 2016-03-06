@@ -113,6 +113,7 @@ code:hover {
 }
 
 .gameplay-image {
-  margin-top: 3.45em;
-  box-shadow: rgba(90, 221, 244, 0.25) 0px 0px 52px;
+  margin-top: 2em;
+  margin-bottom: 3em;
+  box-shadow: rgba(90, 221, 244, 0.35) 0px 0px 72px;
 }
