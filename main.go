@@ -59,7 +59,7 @@ func handler(conn net.Conn, game *Game, config *ssh.ServerConfig) {
 
 		fmt.Println("Received new connection")
 
-		session := NewSession(channel)
+		session := NewSession(channel, game.WorldWidth(), game.WorldHeight())
 		game.AddSession(session)
 
 		reader := bufio.NewReader(channel)

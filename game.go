@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"golang.org/x/crypto/ssh"
 	"io"
+	"math/rand"
 	"time"
 )
 
@@ -96,11 +97,15 @@ type Player struct {
 	Trail []PlayerTrailSegment
 }
 
-func NewPlayer() *Player {
+func NewPlayer(worldWidth, worldHeight int) *Player {
+	rand.Seed(time.Now().UnixNano())
+	startX := rand.Float64() * float64(worldWidth)
+	startY := rand.Float64() * float64(worldHeight)
+
 	return &Player{
 		Marker:    playerDownRune,
 		Direction: PlayerDown,
-		Pos:       &Position{0, 0},
+		Pos:       &Position{startX, startY},
 	}
 }
 
@@ -336,6 +341,14 @@ func (g *Game) worldString() string {
 	return str
 }
 
+func (g *Game) WorldWidth() int {
+	return len(g.level)
+}
+
+func (g *Game) WorldHeight() int {
+	return len(g.level[0])
+}
+
 func (g *Game) Run() {
 	// Proxy g.Redraw's channel to g.hub.Redraw
 	go func() {
@@ -360,7 +373,7 @@ func (g *Game) Run() {
 	//
 	// TODO: Implement diffing and only redraw when needed
 	go func() {
-		c := time.Tick(time.Second / 10)
+		c := time.Tick(time.Second / 15)
 		for range c {
 			g.Redraw <- struct{}{}
 		}
@@ -372,6 +385,11 @@ func (g *Game) Run() {
 // Update is the main game logic loop. Delta is the time since the last update
 // in milliseconds.
 func (g *Game) Update(delta float64) {
+	// We'll use this to make a set of all of the coordinates that are occupied by
+	// trails
+	trailCoordMap := make(map[string]bool)
+
+	// Update player data
 	for player, session := range g.players() {
 		player.Update(delta)
 
@@ -379,6 +397,19 @@ func (g *Game) Update(delta float64) {
 		pos := player.Pos
 		if pos.RoundX() < 0 || pos.RoundX() > len(g.level) ||
 			pos.RoundY() < 0 || pos.RoundY() > len(g.level[0]) {
+			g.hub.Unregister <- session
+		}
+
+		for _, seg := range player.Trail {
+			coordStr := fmt.Sprintf("%d,%d", seg.Pos.RoundX(), seg.Pos.RoundY())
+			trailCoordMap[coordStr] = true
+		}
+	}
+
+	// Check if any players collide with a trail and kick them if so
+	for player, session := range g.players() {
+		playerPos := fmt.Sprintf("%d,%d", player.Pos.RoundX(), player.Pos.RoundY())
+		if collided := trailCoordMap[playerPos]; collided {
 			g.hub.Unregister <- session
 		}
 	}
@@ -401,9 +432,9 @@ type Session struct {
 	Player *Player
 }
 
-func NewSession(c ssh.Channel) *Session {
+func NewSession(c ssh.Channel, worldWidth, worldHeight int) *Session {
 	s := Session{c: c}
-	s.Player = NewPlayer()
+	s.Player = NewPlayer(worldWidth, worldHeight)
 
 	return &s
 }
