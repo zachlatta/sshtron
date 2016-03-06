@@ -42,7 +42,7 @@ func (h *Hub) Run(g *Game) {
 			h.Sessions[s] = struct{}{}
 		case s := <-h.Unregister:
 			if _, ok := h.Sessions[s]; ok {
-				fmt.Fprint(s, "End of line.\r\n\r\n")
+				fmt.Fprint(s, "\r\n\r\n~ End of Line ~ \r\n\r\n")
 
 				// Unhide the cursor
 				fmt.Fprint(s, "\033[?25h")
@@ -300,6 +300,9 @@ const (
 	keyJ = 'j'
 	keyK = 'k'
 	keyL = 'l'
+
+	keyCtrlC  = 3
+	keyEscape = 27
 )
 
 type GameManager struct {
@@ -364,6 +367,12 @@ func (gm *GameManager) Run() {
 						session.Player.HandleDown()
 					case keyD, keyL:
 						session.Player.HandleRight()
+					case keyCtrlC, keyEscape:
+						if g.SessionCount() == 1 {
+							delete(gm.Games, g.Name)
+						}
+
+						g.RemoveSession(session)
 					}
 				}
 			}()
@@ -609,6 +618,10 @@ func (g *Game) AvailableColors() []color.Attribute {
 	return availableColors
 }
 
+func (g *Game) SessionCount() int {
+	return len(g.hub.Sessions)
+}
+
 func (g *Game) Run() {
 	// Proxy g.Redraw's channel to g.hub.Redraw
 	go func() {
@@ -696,6 +709,10 @@ func (g *Game) Render(s *Session) {
 
 func (g *Game) AddSession(s *Session) {
 	g.hub.Register <- s
+}
+
+func (g *Game) RemoveSession(s *Session) {
+	g.hub.Unregister <- s
 }
 
 type Session struct {
