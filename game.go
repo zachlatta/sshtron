@@ -47,6 +47,10 @@ type Position struct {
 	Y float64
 }
 
+func PositionFromInt(x, y int) Position {
+	return Position{float64(x), float64(y)}
+}
+
 func (p Position) RoundX() int {
 	return int(p.X + 0.5)
 }
@@ -66,16 +70,30 @@ const (
 	playerDownRune  = '⇩'
 	playerRightRune = '⇨'
 
+	playerTrailHorizontal      = '═'
+	playerTrailVertical        = '║'
+	playerTrailLeftCornerUp    = '╔'
+	playerTrailLeftCornerDown  = '╚'
+	playerTrailRightCornerDown = '╝'
+	playerTrailRightCornerUp   = '╗'
+
 	PlayerUp PlayerDirection = iota
 	PlayerLeft
 	PlayerDown
 	PlayerRight
 )
 
+type PlayerTrailSegment struct {
+	Marker rune
+	Pos    Position
+}
+
 type Player struct {
 	Direction PlayerDirection
 	Marker    rune
 	Pos       *Position
+
+	Trail []PlayerTrailSegment
 }
 
 func NewPlayer() *Player {
@@ -84,6 +102,11 @@ func NewPlayer() *Player {
 		Direction: PlayerDown,
 		Pos:       &Position{0, 0},
 	}
+}
+
+func (p *Player) addTrailSegment(pos Position, marker rune) {
+	segment := PlayerTrailSegment{marker, pos}
+	p.Trail = append([]PlayerTrailSegment{segment}, p.Trail...)
 }
 
 func (p *Player) HandleUp() {
@@ -107,6 +130,8 @@ func (p *Player) HandleRight() {
 }
 
 func (p *Player) Update(delta float64) {
+	startX, startY := p.Pos.RoundX(), p.Pos.RoundY()
+
 	switch p.Direction {
 	case PlayerUp:
 		p.Pos.Y -= verticalPlayerSpeed * delta
@@ -116,6 +141,52 @@ func (p *Player) Update(delta float64) {
 		p.Pos.Y += verticalPlayerSpeed * delta
 	case PlayerRight:
 		p.Pos.X += horizontalPlayerSpeed * delta
+	}
+
+	endX, endY := p.Pos.RoundX(), p.Pos.RoundY()
+
+	// If we moved, add a trail segment.
+	if endX != startX || endY != startY {
+		var lastSeg *PlayerTrailSegment
+		var lastSegX, lastSegY int
+		if len(p.Trail) > 0 {
+			lastSeg = &p.Trail[0]
+			lastSegX = lastSeg.Pos.RoundX()
+			lastSegY = lastSeg.Pos.RoundY()
+		}
+
+		pos := PositionFromInt(startX, startY)
+
+		switch {
+		// Handle corners. This took an ungodly amount of time to figure. Highly
+		// recommend you don't touch.
+		case lastSeg != nil &&
+			(p.Direction == PlayerRight && endX > lastSegX && endY < lastSegY) ||
+			(p.Direction == PlayerDown && endX < lastSegX && endY > lastSegY):
+			p.addTrailSegment(pos, playerTrailLeftCornerUp)
+		case lastSeg != nil &&
+			(p.Direction == PlayerUp && endX > lastSegX && endY < lastSegY) ||
+			(p.Direction == PlayerLeft && endX < lastSegX && endY > lastSegY):
+			p.addTrailSegment(pos, playerTrailRightCornerDown)
+		case lastSeg != nil &&
+			(p.Direction == PlayerDown && endX > lastSegX && endY > lastSegY) ||
+			(p.Direction == PlayerLeft && endX < lastSegX && endY < lastSegY):
+			p.addTrailSegment(pos, playerTrailRightCornerUp)
+		case lastSeg != nil &&
+			(p.Direction == PlayerRight && endX > lastSegX && endY > lastSegY) ||
+			(p.Direction == PlayerUp && endX < lastSegX && endY < lastSegY):
+			p.addTrailSegment(pos, playerTrailLeftCornerDown)
+
+		// Vertical and horizontal trails
+		case endX == startX && endY < startY:
+			p.addTrailSegment(pos, playerTrailVertical)
+		case endX < startX && endY == startY:
+			p.addTrailSegment(pos, playerTrailHorizontal)
+		case endX == startX && endY > startY:
+			p.addTrailSegment(pos, playerTrailVertical)
+		case endX > startX && endY == startY:
+			p.addTrailSegment(pos, playerTrailHorizontal)
+		}
 	}
 }
 
@@ -246,6 +317,11 @@ func (g *Game) worldString() string {
 	for player := range g.players() {
 		pos := player.Pos
 		strWorld[pos.RoundX()+1][pos.RoundY()+1] = player.Marker
+
+		// Load the player's trail into the rune slice
+		for _, segment := range player.Trail {
+			strWorld[segment.Pos.RoundX()+1][segment.Pos.RoundY()+1] = segment.Marker
+		}
 	}
 
 	// Convert the rune slice to a string
