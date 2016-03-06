@@ -22,7 +22,8 @@ func handler(conn net.Conn, gm *GameManager, config *ssh.ServerConfig) {
 	// net.Conn.
 	_, chans, reqs, err := ssh.NewServerConn(conn, config)
 	if err != nil {
-		panic("failed to handshake")
+		fmt.Println("Failed to handshake with new client")
+		return
 	}
 	// The incoming Request channel must be serviced.
 	go ssh.DiscardRequests(reqs)
@@ -39,7 +40,8 @@ func handler(conn net.Conn, gm *GameManager, config *ssh.ServerConfig) {
 		}
 		channel, requests, err := newChannel.Accept()
 		if err != nil {
-			panic("could not accept channel.")
+			fmt.Println("could not accept channel.")
+			return
 		}
 
 		// Reject all out of band requests accept for the unix defaults, pty-req and
