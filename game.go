@@ -92,7 +92,6 @@ const (
 	playerBlue    = color.FgBlue
 	playerMagenta = color.FgMagenta
 	playerCyan    = color.FgCyan
-	playerWhite   = color.FgWhite
 
 	PlayerUp PlayerDirection = iota
 	PlayerLeft
@@ -101,7 +100,7 @@ const (
 )
 
 var playerColors = []color.Attribute{playerRed, playerGreen, playerYellow,
-	playerBlue, playerMagenta, playerCyan, playerWhite}
+	playerBlue, playerMagenta, playerCyan}
 
 type PlayerTrailSegment struct {
 	Marker rune
