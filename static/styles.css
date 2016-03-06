@@ -19,10 +19,6 @@ body {
   background-color: black;
 }
 
-body::selection {
-  background: #5addf4;
-}
-
 p {
   font-size: 22px;
 }
@@ -101,7 +97,6 @@ code {
   text-shadow: #DF740C 0 -1px 35px;
   color: #DF740C;
   border: rgba(223, 116, 12, 0.25) 1px solid;
-  padding: 1em;
   background: none;
   font-family: monospace;
 }
