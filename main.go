@@ -5,13 +5,16 @@ import (
 	"golang.org/x/crypto/ssh"
 	"io/ioutil"
 	"net"
+	"net/http"
 	"os"
 )
 
 const (
-	portEnv = "PORT"
+	sshPortEnv  = "SSH_PORT"
+	httpPortEnv = "PORT"
 
-	defaultPort = "2022"
+	defaultSshPort  = "2022"
+	defaultHttpPort = "3000"
 )
 
 func handler(conn net.Conn, gm *GameManager, config *ssh.ServerConfig) {
@@ -62,16 +65,19 @@ func handler(conn net.Conn, gm *GameManager, config *ssh.ServerConfig) {
 	}
 }
 
-func port() string {
+func port(env, def string) string {
 	var port string
-	if os.Getenv(portEnv) == "" {
-		port = defaultPort
+	if os.Getenv(env) == "" {
+		port = def
 	}
 
 	return fmt.Sprintf(":%s", port)
 }
 
 func main() {
+	sshPort := port(sshPortEnv, defaultSshPort)
+	httpPort := port(httpPortEnv, defaultHttpPort)
+
 	// Everyone can login!
 	config := &ssh.ServerConfig{
 		NoClientAuth: true,
@@ -93,14 +99,20 @@ func main() {
 	gm := NewGameManager()
 	go gm.Run()
 
+	fmt.Printf(
+		"Listening on port %s for SSH and port %s for HTTP...\n",
+		sshPort,
+		httpPort,
+	)
+
+	go panic(http.ListenAndServe(httpPort, http.FileServer(http.Dir("./static/"))))
+
 	// Once a ServerConfig has been configured, connections can be
 	// accepted.
-	listener, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0%s", port()))
+	listener, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0%s", sshPort))
 	if err != nil {
 		panic("failed to listen for connection")
 	}
-
-	fmt.Printf("Listening on port %s...\n", port())
 
 	for {
 		nConn, err := listener.Accept()
