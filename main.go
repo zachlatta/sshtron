@@ -72,17 +72,13 @@ func handler(conn net.Conn, game *Game, config *ssh.ServerConfig) {
 
 			switch r {
 			case keyUp:
-				fmt.Println("Up")
-				session.Player.Direction = PlayerUp
+				session.Player.HandleUp()
 			case keyLeft:
-				fmt.Println("Left")
-				session.Player.Direction = PlayerLeft
+				session.Player.HandleLeft()
 			case keyDown:
-				fmt.Println("Down")
-				session.Player.Direction = PlayerDown
+				session.Player.HandleDown()
 			case keyRight:
-				fmt.Println("Right")
-				session.Player.Direction = PlayerRight
+				session.Player.HandleRight()
 			}
 		}
 	}

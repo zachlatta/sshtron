@@ -58,6 +58,11 @@ const (
 	verticalPlayerSpeed   = 0.007
 	horizontalPlayerSpeed = 0.01
 
+	playerUpRune    = '⇧'
+	playerLeftRune  = '⇦'
+	playerDownRune  = '⇩'
+	playerRightRune = '⇨'
+
 	PlayerUp PlayerDirection = iota
 	PlayerLeft
 	PlayerDown
@@ -72,10 +77,30 @@ type Player struct {
 
 func NewPlayer() *Player {
 	return &Player{
-		Marker:    'x',
+		Marker:    playerDownRune,
 		Direction: PlayerDown,
 		Pos:       &Position{0, 0},
 	}
+}
+
+func (p *Player) HandleUp() {
+	p.Direction = PlayerUp
+	p.Marker = playerUpRune
+}
+
+func (p *Player) HandleLeft() {
+	p.Direction = PlayerLeft
+	p.Marker = playerLeftRune
+}
+
+func (p *Player) HandleDown() {
+	p.Direction = PlayerDown
+	p.Marker = playerDownRune
+}
+
+func (p *Player) HandleRight() {
+	p.Direction = PlayerRight
+	p.Marker = playerRightRune
 }
 
 func (p *Player) Update(delta float64) {
@@ -217,7 +242,7 @@ func (g *Game) worldString() string {
 	// Load the players into the rune slice
 	for player := range g.players() {
 		pos := player.Pos
-		strWorld[pos.RoundX()+1][pos.RoundY()+1] = 'x'
+		strWorld[pos.RoundX()+1][pos.RoundY()+1] = player.Marker
 	}
 
 	// Convert the rune slice to a string
