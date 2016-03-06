@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"golang.org/x/crypto/ssh"
 	"io/ioutil"
@@ -15,7 +14,7 @@ const (
 	keyRight = 'd'
 )
 
-func handler(conn net.Conn, game *Game, config *ssh.ServerConfig) {
+func handler(conn net.Conn, gm *GameManager, config *ssh.ServerConfig) {
 	// Before use, a handshake must be performed on the incoming
 	// net.Conn.
 	_, chans, reqs, err := ssh.NewServerConn(conn, config)
@@ -59,29 +58,7 @@ func handler(conn net.Conn, game *Game, config *ssh.ServerConfig) {
 
 		fmt.Println("Received new connection")
 
-		session := NewSession(channel, game.WorldWidth(), game.WorldHeight(),
-			game.AvailableColors()[0])
-		game.AddSession(session)
-
-		reader := bufio.NewReader(channel)
-		for {
-			r, _, err := reader.ReadRune()
-			if err != nil {
-				fmt.Println(err)
-				break
-			}
-
-			switch r {
-			case keyUp:
-				session.Player.HandleUp()
-			case keyLeft:
-				session.Player.HandleLeft()
-			case keyDown:
-				session.Player.HandleDown()
-			case keyRight:
-				session.Player.HandleRight()
-			}
-		}
+		gm.HandleChannel <- channel
 	}
 }
 
@@ -103,9 +80,9 @@ func main() {
 
 	config.AddHostKey(private)
 
-	// Create the game itself
-	game := NewGame(78, 22)
-	go game.Run()
+	// Create the GameManager
+	gm := NewGameManager()
+	go gm.Run()
 
 	// Once a ServerConfig has been configured, connections can be
 	// accepted.
@@ -119,6 +96,6 @@ func main() {
 			panic("failed to accept incoming connection")
 		}
 
-		go handler(nConn, game, config)
+		go handler(nConn, gm, config)
 	}
 }

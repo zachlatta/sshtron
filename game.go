@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/dustinkirkland/golang-petname"
 	"github.com/fatih/color"
@@ -285,6 +286,79 @@ type Tile struct {
 	Type TileType
 }
 
+const (
+	gameWidth  = 78
+	gameHeight = 22
+)
+
+type GameManager struct {
+	Games         map[string]*Game
+	HandleChannel chan ssh.Channel
+}
+
+func NewGameManager() *GameManager {
+	return &GameManager{
+		Games:         map[string]*Game{},
+		HandleChannel: make(chan ssh.Channel),
+	}
+}
+
+// getGameWithAvailability returns a reference to a game with available spots for
+// players. If one does not exist, nil is returned.
+func (gm *GameManager) getGameWithAvailability() *Game {
+	var g *Game
+
+	for _, game := range gm.Games {
+		spots := game.AvailableColors()
+		if len(spots) > 0 {
+			g = game
+			break
+		}
+	}
+
+	return g
+}
+
+func (gm *GameManager) Run() {
+	for {
+		select {
+		case c := <-gm.HandleChannel:
+			g := gm.getGameWithAvailability()
+			if g == nil {
+				g = NewGame(gameWidth, gameHeight)
+				gm.Games[g.Name] = g
+
+				go g.Run()
+			}
+
+			session := NewSession(c, g.WorldWidth(), g.WorldHeight(),
+				g.AvailableColors()[0])
+			g.AddSession(session)
+
+			go func() {
+				reader := bufio.NewReader(c)
+				for {
+					r, _, err := reader.ReadRune()
+					if err != nil {
+						fmt.Println(err)
+						break
+					}
+
+					switch r {
+					case keyUp:
+						session.Player.HandleUp()
+					case keyLeft:
+						session.Player.HandleLeft()
+					case keyDown:
+						session.Player.HandleDown()
+					case keyRight:
+						session.Player.HandleRight()
+					}
+				}
+			}()
+		}
+	}
+}
 
 type Game struct {
 	Name      string
@@ -389,7 +463,7 @@ func (g *Game) worldString(s *Session) string {
 
 	// Draw the player's score
 	scoreStr := fmt.Sprintf(
-		" Score: %d : Your High Score: %d : Global High Score: %d ",
+		" Score: %d : Your High Score: %d : Game High Score: %d ",
 		s.Player.Score(),
 		s.HighScore,
 		g.HighScore,
