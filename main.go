@@ -103,7 +103,7 @@ func main() {
 	config.AddHostKey(private)
 
 	// Create the game itself
-	game := NewGame(75, 25)
+	game := NewGame(78, 22)
 	go game.Run()
 
 	// Once a ServerConfig has been configured, connections can be
