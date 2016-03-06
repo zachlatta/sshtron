@@ -333,6 +333,18 @@ func (gm *GameManager) getGameWithAvailability() *Game {
 	return g
 }
 
+func (gm *GameManager) SessionCount() int {
+	sum := 0
+	for _, game := range gm.Games {
+		sum += game.SessionCount()
+	}
+	return sum
+}
+
+func (gm *GameManager) GameCount() int {
+	return len(gm.Games)
+}
+
 func (gm *GameManager) Run() {
 	for {
 		select {
