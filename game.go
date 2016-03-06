@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/fatih/color"
 	"golang.org/x/crypto/ssh"
 	"io"
 	"math/rand"
@@ -78,11 +79,22 @@ const (
 	playerTrailRightCornerDown = '╯'
 	playerTrailRightCornerUp   = '╮'
 
+	playerRed     = color.FgRed
+	playerGreen   = color.FgGreen
+	playerYellow  = color.FgYellow
+	playerBlue    = color.FgBlue
+	playerMagenta = color.FgMagenta
+	playerCyan    = color.FgCyan
+	playerWhite   = color.FgWhite
+
 	PlayerUp PlayerDirection = iota
 	PlayerLeft
 	PlayerDown
 	PlayerRight
 )
+
+var playerColors = []color.Attribute{playerRed, playerGreen, playerYellow,
+	playerBlue, playerMagenta, playerCyan, playerWhite}
 
 type PlayerTrailSegment struct {
 	Marker rune
@@ -92,6 +104,7 @@ type PlayerTrailSegment struct {
 type Player struct {
 	Direction PlayerDirection
 	Marker    rune
+	Color     color.Attribute
 	Pos       *Position
 
 	Trail []PlayerTrailSegment
@@ -99,12 +112,16 @@ type Player struct {
 
 func NewPlayer(worldWidth, worldHeight int) *Player {
 	rand.Seed(time.Now().UnixNano())
+
 	startX := rand.Float64() * float64(worldWidth)
 	startY := rand.Float64() * float64(worldHeight)
+
+	color := playerColors[rand.Intn(len(playerColors))]
 
 	return &Player{
 		Marker:    playerDownRune,
 		Direction: PlayerDown,
+		Color:     color,
 		Pos:       &Position{startX, startY},
 	}
 }
@@ -281,51 +298,54 @@ func (g *Game) worldString() string {
 	worldWidth := len(g.level)
 	worldHeight := len(g.level[0])
 
-	// Create two dimensional slice of runes to represent the world. It's two
+	// Create two dimensional slice of strings to represent the world. It's two
 	// characters larger in each direction to accomodate for walls.
-	strWorld := make([][]rune, worldWidth+3)
+	strWorld := make([][]string, worldWidth+3)
 	for x := range strWorld {
-		strWorld[x] = make([]rune, worldHeight+3)
+		strWorld[x] = make([]string, worldHeight+3)
 	}
 
 	// Load the walls into the rune slice
 	for x := 0; x < worldWidth+2; x++ {
-		strWorld[x][0] = horizontalWall
-		strWorld[x][worldHeight+1] = horizontalWall
+		strWorld[x][0] = string(horizontalWall)
+		strWorld[x][worldHeight+1] = string(horizontalWall)
 	}
 	for y := 0; y < worldHeight+2; y++ {
-		strWorld[0][y] = verticalWall
-		strWorld[worldWidth+1][y] = verticalWall
+		strWorld[0][y] = string(verticalWall)
+		strWorld[worldWidth+1][y] = string(verticalWall)
 	}
 
 	// Time for the edges!
-	strWorld[0][0] = topLeft
-	strWorld[worldWidth+1][0] = topRight
-	strWorld[worldWidth+1][worldHeight+1] = bottomRight
-	strWorld[0][worldHeight+1] = bottomLeft
+	strWorld[0][0] = string(topLeft)
+	strWorld[worldWidth+1][0] = string(topRight)
+	strWorld[worldWidth+1][worldHeight+1] = string(bottomRight)
+	strWorld[0][worldHeight+1] = string(bottomLeft)
 
-	// Load the level into the rune slice
+	// Load the level into the string slice
 	for x := 0; x < worldWidth; x++ {
 		for y := 0; y < worldHeight; y++ {
 			tile := g.level[x][y]
 
 			switch tile.Type {
 			case TileGrass:
-				strWorld[x+1][y+1] = grass
+				strWorld[x+1][y+1] = string(grass)
 			case TileBlocker:
-				strWorld[x+1][y+1] = blocker
+				strWorld[x+1][y+1] = string(blocker)
 			}
 		}
 	}
 
 	// Load the players into the rune slice
 	for player := range g.players() {
+		colorizer := color.New(player.Color).SprintFunc()
+
 		pos := player.Pos
-		strWorld[pos.RoundX()+1][pos.RoundY()+1] = player.Marker
+		strWorld[pos.RoundX()+1][pos.RoundY()+1] = colorizer(string(player.Marker))
 
 		// Load the player's trail into the rune slice
 		for _, segment := range player.Trail {
-			strWorld[segment.Pos.RoundX()+1][segment.Pos.RoundY()+1] = segment.Marker
+			x, y := segment.Pos.RoundX()+1, segment.Pos.RoundY()+1
+			strWorld[x][y] = colorizer(string(segment.Marker))
 		}
 	}
 
