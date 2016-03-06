@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"github.com/dustinkirkland/golang-petname"
 	"github.com/fatih/color"
@@ -433,7 +434,6 @@ const (
 
 // Warning: this will only work with square worlds
 func (g *Game) worldString(s *Session) string {
-	str := ""
 	worldWidth := len(g.level)
 	worldHeight := len(g.level[0])
 
@@ -556,18 +556,19 @@ func (g *Game) worldString(s *Session) string {
 	}
 
 	// Convert the rune slice to a string
+	buffer := bytes.NewBuffer(make([]byte, 0, worldWidth*worldHeight*2))
 	for y := 0; y < len(strWorld[0]); y++ {
 		for x := 0; x < len(strWorld); x++ {
-			str += string(strWorld[x][y])
+			buffer.WriteString(strWorld[x][y])
 		}
 
 		// Don't add an extra newline if we're on the last iteration
 		if y != len(strWorld[0])-1 {
-			str += "\r\n"
+			buffer.WriteString("\r\n")
 		}
 	}
 
-	return str
+	return buffer.String()
 }
 
 func (g *Game) WorldWidth() int {
