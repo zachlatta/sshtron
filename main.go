@@ -5,9 +5,14 @@ import (
 	"golang.org/x/crypto/ssh"
 	"io/ioutil"
 	"net"
+	"os"
 )
 
 const (
+	portEnv = "PORT"
+
+	defaultPort = "2022"
+
 	keyUp    = 'w'
 	keyLeft  = 'a'
 	keyDown  = 's'
@@ -62,6 +67,15 @@ func handler(conn net.Conn, gm *GameManager, config *ssh.ServerConfig) {
 	}
 }
 
+func port() string {
+	var port string
+	if os.Getenv(portEnv) == "" {
+		port = defaultPort
+	}
+
+	return fmt.Sprintf(":%s", port)
+}
+
 func main() {
 	// Everyone can login!
 	config := &ssh.ServerConfig{
@@ -86,10 +100,13 @@ func main() {
 
 	// Once a ServerConfig has been configured, connections can be
 	// accepted.
-	listener, err := net.Listen("tcp", "0.0.0.0:2022")
+	listener, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0%s", port()))
 	if err != nil {
 		panic("failed to listen for connection")
 	}
+
+	fmt.Printf("Listening on port %s...\n", port())
+
 	for {
 		nConn, err := listener.Accept()
 		if err != nil {
