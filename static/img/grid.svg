@@ -47,7 +47,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -59,12 +59,12 @@
     <g
        id="g3019"
        style="fill:#808080"
-       transform="matrix(0.11627891,0,0,0.11627891,242.6391,327.42299)"
+       transform="matrix(0.25581382,0,0,0.25581382,204.36667,276.2628)"
        inkscape:export-filename="/home/maxw/grid.png"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300">
       <rect
-         style="opacity:0.59166715000000003;fill:#808080;fill-opacity:1;stroke:none"
+         style="opacity:0.59166715;fill:#808080;fill-opacity:1;stroke:none"
          id="rect3015"
          width="7.8571382"
          height="30.714281"
@@ -79,7 +79,7 @@
          height="30.714281"
          width="7.8571382"
          id="rect3017"
-         style="opacity:0.59166715000000003;fill:#808080;fill-opacity:1;stroke:none" />
+         style="opacity:0.59166715;fill:#808080;fill-opacity:1;stroke:none" />
     </g>
   </g>
 </svg>
