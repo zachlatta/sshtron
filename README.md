@@ -5,6 +5,8 @@ command below and you'll be playing in seconds:
 
     $ ssh sshtron.zachlatta.com
 
+_Controls: WASD or vim keybindings to move (do **not** use your arrow keys). Escape or Ctrl+c to exit._
+
 ![Demo](static/img/gameplay.gif)
 
 ## Running Your Own Copy
