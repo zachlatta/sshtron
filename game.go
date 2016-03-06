@@ -493,6 +493,26 @@ func (g *Game) WorldHeight() int {
 	return len(g.level[0])
 }
 
+func (g *Game) AvailableColors() []color.Attribute {
+	usedColors := map[color.Attribute]bool{}
+	for _, color := range playerColors {
+		usedColors[color] = false
+	}
+
+	for player := range g.players() {
+		usedColors[player.Color] = true
+	}
+
+	availableColors := []color.Attribute{}
+	for color, used := range usedColors {
+		if !used {
+			availableColors = append(availableColors, color)
+		}
+	}
+
+	return availableColors
+}
+
 func (g *Game) Run() {
 	// Proxy g.Redraw's channel to g.hub.Redraw
 	go func() {
@@ -589,9 +609,11 @@ type Session struct {
 	Player    *Player
 }
 
-func NewSession(c ssh.Channel, worldWidth, worldHeight int) *Session {
+func NewSession(c ssh.Channel, worldWidth, worldHeight int,
+	color color.Attribute) *Session {
+
 	s := Session{c: c}
-	s.newGame(worldWidth, worldHeight, -1)
+	s.newGame(worldWidth, worldHeight, color)
 
 	return &s
 }
