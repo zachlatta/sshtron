@@ -1,0 +1,145 @@
+/* Humanitarian warning: here be dragons */
+
+@font-face {
+  font-family: 'Good Times';
+  src: url('fonts/good_times/good_times_rg-webfont.eot');
+  src: url('fonts/good_times/good_times_rg-webfont.eot?#iefix') format('embedded-opentype'),
+       url('fonts/good_times/good_times_rg-webfont.woff2') format('woff2'),
+       url('fonts/good_times/good_times_rg-webfont.woff') format('woff'),
+       url('fonts/good_times/good_times_rg-webfont.ttf') format('truetype'),
+       url('fonts/good_times/good_times_rg-webfont.svg#good_timesregular') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+
+body {
+  font-family: 'Open Sans', sans-serif;
+  color: #5addf4;
+  background-color: black;
+}
+
+p {
+  font-size: 22px;
+}
+
+.container {
+  margin: 0 auto;
+  width: 720px;
+  text-align: center;
+}
+
+.title {
+  font-size: 128px;
+  font-weight: bold;
+  font-style: italic;
+  font-family: 'Good Times', cursive;
+  margin-top: 50px;
+  margin-bottom: 40px;
+
+  animation: neon 1.5s ease-in-out infinite alternate;
+}
+
+@-webkit-keyframes neon {
+  from {
+    text-shadow: 0 0 10px #000, 0 0 20px #fff, 0 0 30px #fff, 0 0 40px #228DFF, 0 0 70px #228DFF, 0 0 80px #228DFF, 0 0 100px #228DFF, 0 0 150px #228DFF;
+  }
+  to {
+    text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #fff, 0 0 20px #228DFF, 0 0 35px #228DFF, 0 0 40px #228DFF, 0 0 50px #228DFF, 0 0 75px #228DFF;
+  }
+}
+
+.description {
+  margin-top: 0;
+  margin-bottom: 50px;
+  font-size: 36px;
+  font-weight: 600;
+}
+
+.while-supplies-last {
+  margin-bottom: 75px;
+}
+
+.while-supplies-last .description {
+  margin-bottom: 10px;
+}
+
+.while-supplies-last .subtext {
+  margin-top: 0;
+}
+
+.directions p {
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.directions .description {
+  margin-bottom: 15px;
+}
+
+.directions .subtext {
+  font-size: 18px;
+  bottom: 0px;
+}
+
+.directions .horizontal-steps .columns {
+  position: relative;
+  padding-top: 60px;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-bottom: -100px;
+}
+
+.subtext {
+  font-size: 20px;
+  font-style: italic;
+}
+
+.subtext.narrow {
+  max-width: 200px;
+}
+
+.symbol {
+  font-size: 38px;
+}
+
+.stickers img {
+  height: 225px;
+}
+
+.icon {
+  display: inline-block;
+  text-indent: -9999px;
+}
+
+.quarter {
+  background-image: url('quarter.svg');
+  width: 105px;
+  height: 105px;
+  background-size: 105px 105px;
+
+  margin-left: 10px;
+  margin-right: 10px;
+  margin-bottom: 10px;
+}
+
+.letter {
+  background-image: url('letter.svg');
+  width: 600px;
+  height: 300px;
+  background-size: 600px 300px;
+}
+
+.share-links {
+  padding-bottom: 2em;
+}
+
+/* This is done to avoid !important */
+
+.fb-share-button {
+  vertical-align: text-bottom;
+}
+
+.twitter-share-button[style] {
+  vertical-align: text-bottom;
+}
