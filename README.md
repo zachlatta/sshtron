@@ -10,8 +10,8 @@ Escape or Ctrl+C to exit._
 
 ![Demo](static/img/gameplay.gif)
 
-**Code quality disclaimer: SSHTron was built in ~20 hours at
-[BrickHack 2](https://brickhack.io/). Here be dragons.**
+**Code quality disclaimer:** _SSHTron was built in ~20 hours at
+[BrickHack 2](https://brickhack.io/). Here be dragons._
 
 ## Running Your Own Copy
 
