@@ -77,6 +77,7 @@ const (
 	verticalPlayerSpeed        = 0.007
 	horizontalPlayerSpeed      = 0.01
 	playerCountScoreMultiplier = 1.25
+	playerTimeout              = 15 * time.Second
 
 	playerUpRune    = '⇡'
 	playerLeftRune  = '⇠'
@@ -130,6 +131,8 @@ type PlayerTrailSegment struct {
 }
 
 type Player struct {
+	s *Session
+
 	CreatedAt time.Time
 	Direction PlayerDirection
 	Marker    rune
@@ -142,7 +145,9 @@ type Player struct {
 }
 
 // NewPlayer creates a new player. If color is below 1, a random color is chosen
-func NewPlayer(worldWidth, worldHeight int, color color.Attribute) *Player {
+func NewPlayer(s *Session, worldWidth, worldHeight int,
+	color color.Attribute) *Player {
+
 	rand.Seed(time.Now().UnixNano())
 
 	startX := rand.Float64() * float64(worldWidth)
@@ -153,6 +158,7 @@ func NewPlayer(worldWidth, worldHeight int, color color.Attribute) *Player {
 	}
 
 	return &Player{
+		s:         s,
 		CreatedAt: time.Now(),
 		Marker:    playerDownRune,
 		Direction: PlayerDown,
@@ -178,16 +184,19 @@ func (p *Player) calculateScore(delta float64, playerCount int) float64 {
 func (p *Player) HandleUp() {
 	p.Direction = PlayerUp
 	p.Marker = playerUpRune
+	p.s.didAction()
 }
 
 func (p *Player) HandleLeft() {
 	p.Direction = PlayerLeft
 	p.Marker = playerLeftRune
+	p.s.didAction()
 }
 
 func (p *Player) HandleDown() {
 	p.Direction = PlayerDown
 	p.Marker = playerDownRune
+	p.s.didAction()
 }
 
 func (p *Player) HandleRight() {
@@ -695,6 +704,13 @@ func (g *Game) Update(delta float64) {
 			session.StartOver(g.WorldWidth(), g.WorldHeight())
 		}
 
+		// Kick the player if they've timed out
+		if time.Now().Sub(session.LastAction) > playerTimeout {
+			fmt.Fprint(session, "\r\n\r\nYou were terminated due to inactivity\r\n")
+			g.RemoveSession(session)
+			return
+		}
+
 		for _, seg := range player.Trail {
 			coordStr := fmt.Sprintf("%d,%d", seg.Pos.RoundX(), seg.Pos.RoundY())
 			trailCoordMap[coordStr] = true
@@ -730,21 +746,26 @@ func (g *Game) RemoveSession(s *Session) {
 type Session struct {
 	c ssh.Channel
 
-	HighScore int
-	Player    *Player
+	LastAction time.Time
+	HighScore  int
+	Player     *Player
 }
 
 func NewSession(c ssh.Channel, worldWidth, worldHeight int,
 	color color.Attribute) *Session {
 
-	s := Session{c: c}
+	s := Session{c: c, LastAction: time.Now()}
 	s.newGame(worldWidth, worldHeight, color)
 
 	return &s
 }
 
 func (s *Session) newGame(worldWidth, worldHeight int, color color.Attribute) {
-	s.Player = NewPlayer(worldWidth, worldHeight, color)
+	s.Player = NewPlayer(s, worldWidth, worldHeight, color)
+}
+
+func (s *Session) didAction() {
+	s.LastAction = time.Now()
 }
 
 func (s *Session) StartOver(worldWidth, worldHeight int) {
