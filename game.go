@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/dustinkirkland/golang-petname"
 	"github.com/fatih/color"
 	"golang.org/x/crypto/ssh"
 	"math/rand"
@@ -284,20 +285,22 @@ type Tile struct {
 	Type TileType
 }
 
-type Game struct {
-	hub Hub
 
+type Game struct {
+	Name      string
 	Redraw    chan struct{}
 	HighScore int
 
 	// Top left is 0,0
 	level [][]Tile
+	hub   Hub
 }
 
 func NewGame(worldWidth, worldHeight int) *Game {
 	g := &Game{
-		hub:    NewHub(),
+		Name:   petname.Generate(1, ""),
 		Redraw: make(chan struct{}),
+		hub:    NewHub(),
 	}
 	g.initalizeLevel(worldWidth, worldHeight)
 
@@ -436,10 +439,18 @@ func (g *Game) worldString(s *Session) string {
 		strWorld[startX][len(strWorld[0])-1] = " "
 	} else {
 		warning :=
-			" Warning: Other Players Must be Online for You to Score. Get a friend! "
+			" Warning: Other Players Must be Online for You to Score! "
 		for i, r := range warning {
 			strWorld[3+i][len(strWorld[0])-1] = borderColorizer(string(r))
 		}
+	}
+
+	// Draw the game's name
+	nameStr := fmt.Sprintf(" %s ", g.Name)
+	for i, r := range nameStr {
+		charsRemaining := len(nameStr) - i
+		strWorld[len(strWorld)-3-charsRemaining][len(strWorld[0])-1] =
+			borderColorizer(string(r))
 	}
 
 	// Load the level into the string slice
