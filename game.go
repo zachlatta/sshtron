@@ -33,10 +33,17 @@ func (h *Hub) Run(g *Game) {
 				g.Render(s)
 			}
 		case s := <-h.Register:
+			// Hide the cursor
+			fmt.Fprint(s, "\033[?25l")
+
 			h.Sessions[s] = struct{}{}
 		case s := <-h.Unregister:
 			if _, ok := h.Sessions[s]; ok {
 				fmt.Fprint(s, "End of line.\r\n\r\n")
+
+				// Unhide the cursor
+				fmt.Fprint(s, "\033[?25h")
+
 				delete(h.Sessions, s)
 				s.c.Close()
 			}
@@ -438,7 +445,10 @@ func (g *Game) Update(delta float64) {
 func (g *Game) Render(w io.Writer) {
 	worldStr := g.worldString()
 
-	fmt.Fprintln(w)
+	// Clear the screen
+	fmt.Fprint(w, "\033[H\033[2J")
+
+	// Send over the rendered world
 	fmt.Fprint(w, worldStr)
 }
 
