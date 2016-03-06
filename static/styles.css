@@ -19,10 +19,6 @@ body {
   background-color: black;
 }
 
-body::selection {
-  background: #5addf4;
-}
-
 p {
   font-size: 22px;
 }
@@ -74,6 +70,10 @@ p {
   opacity: 0.8;
 }
 
+.subtext.hidden {
+  color: black;
+}
+
 .icon {
   display: inline-block;
   text-indent: -9999px;
@@ -97,7 +97,6 @@ code {
   text-shadow: #DF740C 0 -1px 35px;
   color: #DF740C;
   border: rgba(223, 116, 12, 0.25) 1px solid;
-  padding: 1em;
   background: none;
   font-family: monospace;
 }
