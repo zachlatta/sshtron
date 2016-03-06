@@ -163,7 +163,7 @@ func (p *Player) Update(delta float64) {
 		pos := PositionFromInt(startX, startY)
 
 		switch {
-		// Handle corners. This took an ungodly amount of time to figure. Highly
+		// Handle corners. This took an ungodly amount of time to figure out. Highly
 		// recommend you don't touch.
 		case lastSeg != nil &&
 			(p.Direction == PlayerRight && endX > lastSegX && endY < lastSegY) ||
