@@ -66,8 +66,8 @@ func handler(conn net.Conn, gm *GameManager, config *ssh.ServerConfig) {
 }
 
 func port(env, def string) string {
-	var port string
-	if os.Getenv(env) == "" {
+	port := os.Getenv(env)
+	if port == "" {
 		port = def
 	}
 
