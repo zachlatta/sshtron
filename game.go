@@ -111,6 +111,15 @@ var playerBorderColors = map[color.Attribute]color.Attribute{
 	playerCyan:    color.FgHiCyan,
 }
 
+var playerColorNames = map[color.Attribute]string{
+	playerRed:     "Red",
+	playerGreen:   "Green",
+	playerYellow:  "Yellow",
+	playerBlue:    "Blue",
+	playerMagenta: "Magenta",
+	playerCyan:    "Cyan",
+}
+
 type PlayerTrailSegment struct {
 	Marker rune
 	Pos    Position
@@ -260,7 +269,8 @@ type Tile struct {
 type Game struct {
 	hub Hub
 
-	Redraw chan struct{}
+	Redraw    chan struct{}
+	HighScore int
 
 	// Top left is 0,0
 	level [][]Tile
@@ -358,12 +368,21 @@ func (g *Game) worldString(s *Session) string {
 
 	// Draw the player's score
 	scoreStr := fmt.Sprintf(
-		" Score: %d : High Score: %d ",
+		" Score: %d : Your High Score: %d : Global High Score: %d ",
 		s.Player.Score(),
 		s.HighScore,
+		g.HighScore,
 	)
 	for i, r := range scoreStr {
 		strWorld[3+i][0] = borderColorizer(string(r))
+	}
+
+	// Draw the player's color
+	colorStr := fmt.Sprintf(" %s ", playerColorNames[s.Player.Color])
+	colorStrColorizer := color.New(s.Player.Color).SprintFunc()
+	for i, r := range colorStr {
+		charsRemaining := len(colorStr) - i
+		strWorld[len(strWorld)-3-charsRemaining][0] = colorStrColorizer(string(r))
 	}
 
 	// Draw score warning if nobody else is online
@@ -371,7 +390,7 @@ func (g *Game) worldString(s *Session) string {
 		warning :=
 			" Warning: Other Players Must be Online for You to Score. Get a friend! "
 		for i, r := range warning {
-			strWorld[3+i][len(strWorld[0])-2] = borderColorizer(string(r))
+			strWorld[3+i][len(strWorld[0])-1] = borderColorizer(string(r))
 		}
 	}
 
@@ -470,9 +489,14 @@ func (g *Game) Update(delta float64) {
 	for player, session := range g.players() {
 		player.Update(g, delta)
 
-		// Update high score, if applicable
+		// Update session high score, if applicable
 		if player.Score() > session.HighScore {
 			session.HighScore = player.Score()
+		}
+
+		// Update global high score, if applicable
+		if player.Score() > g.HighScore {
+			g.HighScore = player.Score()
 		}
 
 		// Restart the player if they're out of bounds
