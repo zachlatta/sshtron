@@ -334,9 +334,9 @@ func (g *Game) worldString(s *Session) string {
 
 	// Create two dimensional slice of strings to represent the world. It's two
 	// characters larger in each direction to accomodate for walls.
-	strWorld := make([][]string, worldWidth+3)
+	strWorld := make([][]string, worldWidth+2)
 	for x := range strWorld {
-		strWorld[x] = make([]string, worldHeight+3)
+		strWorld[x] = make([]string, worldHeight+2)
 	}
 
 	// Load the walls into the rune slice
@@ -409,7 +409,10 @@ func (g *Game) worldString(s *Session) string {
 			str += string(strWorld[x][y])
 		}
 
-		str += "\r\n"
+		// Don't add an extra newline if we're on the last iteration
+		if y != len(strWorld[0])-1 {
+			str += "\r\n"
+		}
 	}
 
 	return str
