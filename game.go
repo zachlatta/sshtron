@@ -395,8 +395,8 @@ func (g *Game) Update(delta float64) {
 
 		// Kick player if they're out of bounds
 		pos := player.Pos
-		if pos.RoundX() < 0 || pos.RoundX() > len(g.level) ||
-			pos.RoundY() < 0 || pos.RoundY() > len(g.level[0]) {
+		if pos.RoundX() < 0 || pos.RoundX() >= len(g.level) ||
+			pos.RoundY() < 0 || pos.RoundY() >= len(g.level[0]) {
 			g.hub.Unregister <- session
 		}
 
