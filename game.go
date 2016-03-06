@@ -33,7 +33,7 @@ func (h *Hub) Run(g *Game) {
 		select {
 		case <-h.Redraw:
 			for s := range h.Sessions {
-				g.Render(s)
+				go g.Render(s)
 			}
 		case s := <-h.Register:
 			// Hide the cursor
