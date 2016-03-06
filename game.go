@@ -66,17 +66,17 @@ const (
 	verticalPlayerSpeed   = 0.007
 	horizontalPlayerSpeed = 0.01
 
-	playerUpRune    = '⇧'
-	playerLeftRune  = '⇦'
-	playerDownRune  = '⇩'
-	playerRightRune = '⇨'
+	playerUpRune    = '⇡'
+	playerLeftRune  = '⇠'
+	playerDownRune  = '⇣'
+	playerRightRune = '⇢'
 
-	playerTrailHorizontal      = '═'
-	playerTrailVertical        = '║'
-	playerTrailLeftCornerUp    = '╔'
-	playerTrailLeftCornerDown  = '╚'
-	playerTrailRightCornerDown = '╝'
-	playerTrailRightCornerUp   = '╗'
+	playerTrailHorizontal      = '┄'
+	playerTrailVertical        = '┆'
+	playerTrailLeftCornerUp    = '╭'
+	playerTrailLeftCornerDown  = '╰'
+	playerTrailRightCornerDown = '╯'
+	playerTrailRightCornerUp   = '╮'
 
 	PlayerUp PlayerDirection = iota
 	PlayerLeft
@@ -264,12 +264,12 @@ func (g *Game) players() map[*Player]*Session {
 
 // Characters for rendering
 const (
-	verticalWall   = '┆'
-	horizontalWall = '┄'
-	topLeft        = '╭'
-	topRight       = '╮'
-	bottomRight    = '╯'
-	bottomLeft     = '╰'
+	verticalWall   = '║'
+	horizontalWall = '═'
+	topLeft        = '╔'
+	topRight       = '╗'
+	bottomRight    = '╝'
+	bottomLeft     = '╚'
 
 	grass   = ' '
 	blocker = '■'
