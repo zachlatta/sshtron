@@ -105,7 +105,9 @@ func main() {
 		httpPort,
 	)
 
-	go panic(http.ListenAndServe(httpPort, http.FileServer(http.Dir("./static/"))))
+	go func() {
+		panic(http.ListenAndServe(httpPort, http.FileServer(http.Dir("./static/"))))
+	}()
 
 	// Once a ServerConfig has been configured, connections can be
 	// accepted.
