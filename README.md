@@ -5,6 +5,8 @@ command below and you'll be playing in seconds:
 
     $ ssh sshtron.zachlatta.com
 
+![Demo](static/img/gameplay.gif)
+
 ## Running Your Own Copy
 
 Clone the project and `cd` into its directory. These instructions assume that
