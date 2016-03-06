@@ -58,6 +58,7 @@ func handler(conn net.Conn, game *Game, config *ssh.ServerConfig) {
 		}(requests)
 
 		fmt.Println("Received new connection")
+
 		session := NewSession(channel)
 		game.AddSession(session)
 
@@ -72,19 +73,17 @@ func handler(conn net.Conn, game *Game, config *ssh.ServerConfig) {
 			switch r {
 			case keyUp:
 				fmt.Println("Up")
-				session.Player.Pos.Y -= 1
+				session.Player.Direction = PlayerUp
 			case keyLeft:
 				fmt.Println("Left")
-				session.Player.Pos.X -= 1
+				session.Player.Direction = PlayerLeft
 			case keyDown:
 				fmt.Println("Down")
-				session.Player.Pos.Y += 1
+				session.Player.Direction = PlayerDown
 			case keyRight:
 				fmt.Println("Right")
-				session.Player.Pos.X += 1
+				session.Player.Direction = PlayerRight
 			}
-
-			game.hub.Rerender <- struct{}{}
 		}
 	}
 }
@@ -108,7 +107,7 @@ func main() {
 	config.AddHostKey(private)
 
 	// Create the game itself
-	game := NewGame(50, 25)
+	game := NewGame(75, 25)
 	go game.Run()
 
 	// Once a ServerConfig has been configured, connections can be
