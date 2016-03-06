@@ -553,7 +553,7 @@ func (g *Game) worldString(s *Session) string {
 		strWorld[startX][len(strWorld[0])-1] = " "
 	} else {
 		warning :=
-			" Warning: Other Players Must be Online for You to Score! "
+			" Warning: Other Players Must be in This Game for You to Score! "
 		for i, r := range warning {
 			strWorld[3+i][len(strWorld[0])-1] = borderColorizer(string(r))
 		}
