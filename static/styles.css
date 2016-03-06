@@ -74,6 +74,10 @@ p {
   opacity: 0.8;
 }
 
+.subtext.hidden {
+  color: black;
+}
+
 .icon {
   display: inline-block;
   text-indent: -9999px;
