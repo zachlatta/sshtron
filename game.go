@@ -5,6 +5,7 @@ import (
 	"github.com/fatih/color"
 	"golang.org/x/crypto/ssh"
 	"math/rand"
+	"sort"
 	"time"
 )
 
@@ -255,6 +256,20 @@ func (p *Player) Update(g *Game, delta float64) {
 	p.score = p.calculateScore(delta, len(g.players()))
 }
 
+type ByColor []*Player
+
+func (slice ByColor) Len() int {
+	return len(slice)
+}
+
+func (slice ByColor) Less(i, j int) bool {
+	return playerColorNames[slice[i].Color] < playerColorNames[slice[j].Color]
+}
+
+func (slice ByColor) Swap(i, j int) {
+	slice[i], slice[j] = slice[j], slice[i]
+}
+
 type TileType int
 
 const (
@@ -385,8 +400,38 @@ func (g *Game) worldString(s *Session) string {
 		strWorld[len(strWorld)-3-charsRemaining][0] = colorStrColorizer(string(r))
 	}
 
-	// Draw score warning if nobody else is online
-	if len(g.players()) == 1 {
+	// Draw everyone's scores
+	if len(g.players()) > 1 {
+		// Sort the players by color name
+		players := []*Player{}
+
+		for player := range g.players() {
+			if player == s.Player {
+				continue
+			}
+
+			players = append(players, player)
+		}
+
+		sort.Sort(ByColor(players))
+		startX := 3
+
+		// Actually draw their scores
+		for _, player := range players {
+			colorizer := color.New(player.Color).SprintFunc()
+			scoreStr := fmt.Sprintf(" %s: %d",
+				playerColorNames[player.Color],
+				player.Score(),
+			)
+			for _, r := range scoreStr {
+				strWorld[startX][len(strWorld[0])-1] = colorizer(string(r))
+				startX++
+			}
+		}
+
+		// Add final spacing next to wall
+		strWorld[startX][len(strWorld[0])-1] = " "
+	} else {
 		warning :=
 			" Warning: Other Players Must be Online for You to Score. Get a friend! "
 		for i, r := range warning {
