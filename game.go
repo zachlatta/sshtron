@@ -138,13 +138,16 @@ type Player struct {
 	score float64
 }
 
-func NewPlayer(worldWidth, worldHeight int) *Player {
+// NewPlayer creates a new player. If color is below 1, a random color is chosen
+func NewPlayer(worldWidth, worldHeight int, color color.Attribute) *Player {
 	rand.Seed(time.Now().UnixNano())
 
 	startX := rand.Float64() * float64(worldWidth)
 	startY := rand.Float64() * float64(worldHeight)
 
-	color := playerColors[rand.Intn(len(playerColors))]
+	if color < 0 {
+		color = playerColors[rand.Intn(len(playerColors))]
+	}
 
 	return &Player{
 		CreatedAt: time.Now(),
@@ -588,17 +591,17 @@ type Session struct {
 
 func NewSession(c ssh.Channel, worldWidth, worldHeight int) *Session {
 	s := Session{c: c}
-	s.newGame(worldWidth, worldHeight)
+	s.newGame(worldWidth, worldHeight, -1)
 
 	return &s
 }
 
-func (s *Session) newGame(worldWidth, worldHeight int) {
-	s.Player = NewPlayer(worldWidth, worldHeight)
+func (s *Session) newGame(worldWidth, worldHeight int, color color.Attribute) {
+	s.Player = NewPlayer(worldWidth, worldHeight, color)
 }
 
 func (s *Session) StartOver(worldWidth, worldHeight int) {
-	s.newGame(worldWidth, worldHeight)
+	s.newGame(worldWidth, worldHeight, s.Player.Color)
 }
 
 func (s *Session) Read(p []byte) (int, error) {
