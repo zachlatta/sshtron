@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"golang.org/x/crypto/ssh"
 	"io"
 	"time"
 )
@@ -33,7 +34,9 @@ func (h *Hub) Run(g *Game) {
 			h.Sessions[s] = struct{}{}
 		case s := <-h.Unregister:
 			if _, ok := h.Sessions[s]; ok {
+				fmt.Fprint(s, "End of line.\r\n\r\n")
 				delete(h.Sessions, s)
+				s.c.Close()
 			}
 		}
 	}
@@ -173,11 +176,11 @@ func (g *Game) setTileType(pos Position, tileType TileType) error {
 	return nil
 }
 
-func (g *Game) players() map[*Player]struct{} {
-	players := make(map[*Player]struct{})
+func (g *Game) players() map[*Player]*Session {
+	players := make(map[*Player]*Session)
 
 	for session := range g.hub.Sessions {
-		players[session.Player] = struct{}{}
+		players[session.Player] = session
 	}
 
 	return players
@@ -293,8 +296,15 @@ func (g *Game) Run() {
 // Update is the main game logic loop. Delta is the time since the last update
 // in milliseconds.
 func (g *Game) Update(delta float64) {
-	for player := range g.players() {
+	for player, session := range g.players() {
 		player.Update(delta)
+
+		// Kick player if they're out of bounds
+		pos := player.Pos
+		if pos.RoundX() < 0 || pos.RoundX() > len(g.level) ||
+			pos.RoundY() < 0 || pos.RoundY() > len(g.level[0]) {
+			g.hub.Unregister <- session
+		}
 	}
 }
 
@@ -310,12 +320,12 @@ func (g *Game) AddSession(s *Session) {
 }
 
 type Session struct {
-	c io.ReadWriter
+	c ssh.Channel
 
 	Player *Player
 }
 
-func NewSession(c io.ReadWriter) *Session {
+func NewSession(c ssh.Channel) *Session {
 	s := Session{c: c}
 	s.Player = NewPlayer()
 
