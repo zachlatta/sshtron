@@ -44,11 +44,16 @@ func handler(conn net.Conn, gm *GameManager, config *ssh.ServerConfig) {
 			return
 		}
 
+		// TODO: Remove this -- only temporary while we launch on HN
+		//
+		// To see how many concurrent users are online
+		fmt.Printf("Player joined. Current stats: %d users, %d games\n",
+			gm.SessionCount(), gm.GameCount())
+
 		// Reject all out of band requests accept for the unix defaults, pty-req and
 		// shell.
 		go func(in <-chan *ssh.Request) {
 			for req := range in {
-				fmt.Println("New request:", req.Type)
 				switch req.Type {
 				case "pty-req":
 					req.Reply(true, nil)
@@ -60,8 +65,6 @@ func handler(conn net.Conn, gm *GameManager, config *ssh.ServerConfig) {
 				req.Reply(false, nil)
 			}
 		}(requests)
-
-		fmt.Println("Received new connection")
 
 		gm.HandleChannel <- channel
 	}
