@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/fatih/color"
 	"golang.org/x/crypto/ssh"
-	"io"
 	"math/rand"
 	"time"
 )
@@ -101,6 +100,15 @@ const (
 
 var playerColors = []color.Attribute{playerRed, playerGreen, playerYellow,
 	playerBlue, playerMagenta, playerCyan}
+
+var playerBorderColors = map[color.Attribute]color.Attribute{
+	playerRed:     color.FgHiRed,
+	playerGreen:   color.FgHiGreen,
+	playerYellow:  color.FgHiYellow,
+	playerBlue:    color.FgHiBlue,
+	playerMagenta: color.FgHiMagenta,
+	playerCyan:    color.FgHiCyan,
+}
 
 type PlayerTrailSegment struct {
 	Marker rune
@@ -299,7 +307,7 @@ const (
 )
 
 // Warning: this will only work with square worlds
-func (g *Game) worldString() string {
+func (g *Game) worldString(s *Session) string {
 	str := ""
 	worldWidth := len(g.level)
 	worldHeight := len(g.level[0])
@@ -312,20 +320,21 @@ func (g *Game) worldString() string {
 	}
 
 	// Load the walls into the rune slice
+	borderColorizer := color.New(playerBorderColors[s.Player.Color]).SprintFunc()
 	for x := 0; x < worldWidth+2; x++ {
-		strWorld[x][0] = string(horizontalWall)
-		strWorld[x][worldHeight+1] = string(horizontalWall)
+		strWorld[x][0] = borderColorizer(string(horizontalWall))
+		strWorld[x][worldHeight+1] = borderColorizer(string(horizontalWall))
 	}
 	for y := 0; y < worldHeight+2; y++ {
-		strWorld[0][y] = string(verticalWall)
-		strWorld[worldWidth+1][y] = string(verticalWall)
+		strWorld[0][y] = borderColorizer(string(verticalWall))
+		strWorld[worldWidth+1][y] = borderColorizer(string(verticalWall))
 	}
 
 	// Time for the edges!
-	strWorld[0][0] = string(topLeft)
-	strWorld[worldWidth+1][0] = string(topRight)
-	strWorld[worldWidth+1][worldHeight+1] = string(bottomRight)
-	strWorld[0][worldHeight+1] = string(bottomLeft)
+	strWorld[0][0] = borderColorizer(string(topLeft))
+	strWorld[worldWidth+1][0] = borderColorizer(string(topRight))
+	strWorld[worldWidth+1][worldHeight+1] = borderColorizer(string(bottomRight))
+	strWorld[0][worldHeight+1] = borderColorizer(string(bottomLeft))
 
 	// Load the level into the string slice
 	for x := 0; x < worldWidth; x++ {
@@ -419,11 +428,11 @@ func (g *Game) Update(delta float64) {
 	for player, session := range g.players() {
 		player.Update(delta)
 
-		// Kick player if they're out of bounds
+		// Restart the player if they're out of bounds
 		pos := player.Pos
 		if pos.RoundX() < 0 || pos.RoundX() >= len(g.level) ||
 			pos.RoundY() < 0 || pos.RoundY() >= len(g.level[0]) {
-			g.hub.Unregister <- session
+			session.StartOver(g.WorldWidth(), g.WorldHeight())
 		}
 
 		for _, seg := range player.Trail {
@@ -432,23 +441,23 @@ func (g *Game) Update(delta float64) {
 		}
 	}
 
-	// Check if any players collide with a trail and kick them if so
+	// Check if any players collide with a trail and restart them if so
 	for player, session := range g.players() {
 		playerPos := fmt.Sprintf("%d,%d", player.Pos.RoundX(), player.Pos.RoundY())
 		if collided := trailCoordMap[playerPos]; collided {
-			g.hub.Unregister <- session
+			session.StartOver(g.WorldWidth(), g.WorldHeight())
 		}
 	}
 }
 
-func (g *Game) Render(w io.Writer) {
-	worldStr := g.worldString()
+func (g *Game) Render(s *Session) {
+	worldStr := g.worldString(s)
 
 	// Clear the screen
-	fmt.Fprint(w, "\033[H\033[2J")
+	fmt.Fprint(s, "\033[H\033[2J")
 
 	// Send over the rendered world
-	fmt.Fprint(w, worldStr)
+	fmt.Fprint(s, worldStr)
 }
 
 func (g *Game) AddSession(s *Session) {
@@ -463,9 +472,17 @@ type Session struct {
 
 func NewSession(c ssh.Channel, worldWidth, worldHeight int) *Session {
 	s := Session{c: c}
-	s.Player = NewPlayer(worldWidth, worldHeight)
+	s.newGame(worldWidth, worldHeight)
 
 	return &s
+}
+
+func (s *Session) newGame(worldWidth, worldHeight int) {
+	s.Player = NewPlayer(worldWidth, worldHeight)
+}
+
+func (s *Session) StartOver(worldWidth, worldHeight int) {
+	s.newGame(worldWidth, worldHeight)
 }
 
 func (s *Session) Read(p []byte) (int, error) {
