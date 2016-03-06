@@ -12,11 +12,6 @@ const (
 	portEnv = "PORT"
 
 	defaultPort = "2022"
-
-	keyUp    = 'w'
-	keyLeft  = 'a'
-	keyDown  = 's'
-	keyRight = 'd'
 )
 
 func handler(conn net.Conn, gm *GameManager, config *ssh.ServerConfig) {

@@ -290,6 +290,16 @@ type Tile struct {
 const (
 	gameWidth  = 78
 	gameHeight = 22
+
+	keyW = 'w'
+	keyA = 'a'
+	keyS = 's'
+	keyD = 'd'
+
+	keyH = 'h'
+	keyJ = 'j'
+	keyK = 'k'
+	keyL = 'l'
 )
 
 type GameManager struct {
@@ -346,13 +356,13 @@ func (gm *GameManager) Run() {
 					}
 
 					switch r {
-					case keyUp:
+					case keyW, keyK:
 						session.Player.HandleUp()
-					case keyLeft:
+					case keyA, keyH:
 						session.Player.HandleLeft()
-					case keyDown:
+					case keyS, keyJ:
 						session.Player.HandleDown()
-					case keyRight:
+					case keyD, keyL:
 						session.Player.HandleRight()
 					}
 				}
