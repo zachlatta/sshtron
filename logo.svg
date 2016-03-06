@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   version="1.1"
+   width="262.02365"
+   height="46.362488"
+   id="svg2">
+  <defs
+     id="defs4">
+    <filter
+       color-interpolation-filters="sRGB"
+       id="filter3797">
+      <feGaussianBlur
+         id="feGaussianBlur3799"
+         stdDeviation="0.34176797" />
+    </filter>
+    <filter
+       y="-0.25"
+       height="1.5"
+       color-interpolation-filters="sRGB"
+       id="filter3797-5">
+      <feGaussianBlur
+         result="fbSourceGraphic"
+         id="feGaussianBlur3799-6"
+         stdDeviation="0.34176797" />
+      <feColorMatrix
+         id="feColorMatrix3846"
+         values="0 0 0 -1 0 0 0 0 -1 0 0 0 0 -1 0 0 0 0 1 0"
+         in="fbSourceGraphic"
+         result="fbSourceGraphicAlpha" />
+      <feGaussianBlur
+         in="fbSourceGraphic"
+         result="result6"
+         stdDeviation="5"
+         id="feGaussianBlur3848" />
+      <feComposite
+         in2="result6"
+         operator="atop"
+         in="fbSourceGraphic"
+         result="result8"
+         id="feComposite3850" />
+      <feComposite
+         in2="fbSourceGraphicAlpha"
+         operator="over"
+         in="result8"
+         result="result9"
+         id="feComposite3852" />
+      <feColorMatrix
+         result="result10"
+         values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 1 0 "
+         id="feColorMatrix3854" />
+      <feBlend
+         in2="result6"
+         mode="normal"
+         in="result10"
+         id="feBlend3856" />
+    </filter>
+  </defs>
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     transform="translate(-171.13463,-178.38869)"
+     id="layer1">
+    <text
+       x="300.46521"
+       y="216.08076"
+       id="text2985-8"
+       xml:space="preserve"
+       style="font-size:40px;font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;opacity:0.30083337;fill:#2794f4;fill-opacity:1;stroke:none;filter:url(#filter3797-5);font-family:Good Times;-inkscape-font-specification:Good Times Bold Italic"><tspan
+         x="300.46521"
+         y="216.08076"
+         id="tspan2987-0"
+         style="font-size:40px;font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:125%;writing-mode:lr-tb;text-anchor:middle;fill:#2794f4;fill-opacity:1;font-family:Good Times;-inkscape-font-specification:Good Times Bold Italic">SSHTron</tspan></text>
+    <text
+       x="300.7576"
+       y="216.32138"
+       id="text2985"
+       xml:space="preserve"
+       style="font-size:40px;font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#5addf4;fill-opacity:1;stroke:none;filter:url(#filter3797);font-family:Good Times;-inkscape-font-specification:Good Times Bold Italic"><tspan
+         x="300.7576"
+         y="216.32138"
+         id="tspan2987"
+         style="font-size:40px;font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:125%;writing-mode:lr-tb;text-anchor:middle;fill:#5addf4;fill-opacity:1;font-family:Good Times;-inkscape-font-specification:Good Times Bold Italic">SSHTron</tspan></text>
+    <text
+       x="300.5051"
+       y="215.56378"
+       id="text3858"
+       xml:space="preserve"
+       style="font-size:40px;font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#5addf4;fill-opacity:1;stroke:none;filter:url(#filter3797);font-family:Good Times;-inkscape-font-specification:Good Times Bold Italic"><tspan
+         x="300.5051"
+         y="215.56378"
+         id="tspan3860"
+         style="font-size:40px;font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:125%;writing-mode:lr-tb;text-anchor:middle;fill:#5addf4;fill-opacity:1;font-family:Good Times;-inkscape-font-specification:Good Times Bold Italic">SSHTron</tspan></text>
+  </g>
+</svg>

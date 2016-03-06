@@ -31,9 +31,9 @@ p {
 }
 
 .container {
-  margin: 0 auto;
-  min-width: 720px;
   text-align: center;
+  width: 720px;
+  margin: 0 auto;
 }
 
 .title {
@@ -41,12 +41,12 @@ p {
   font-weight: bold;
   font-style: italic;
   font-family: 'Good Times', cursive;
+  margin: 0 auto;
+  text-align: center;
+
   margin-top: 50px;
   margin-bottom: 40px;
-  text-align: center;
   letter-spacing: 0px;
-  margin-left: auto;
-  margin-right: auto;
   text-shadow: 0 0 5px rgba(255, 255, 255, 1),
                0 0 10px rgba(255, 255, 255, 0.5),
                0 0 15px rgba(255, 255, 255, 0.5),
@@ -110,4 +110,9 @@ code:hover {
   text-shadow: #DF740C 5 10px 55px;
   transition-duration: 1s;
   border: rgba(223, 116, 12, 25) 1px solid;
+}
+
+.gameplay-image {
+  margin-top: 3.45em;
+  box-shadow: rgba(90, 221, 244, 0.25) 0px 0px 52px;
 }
