@@ -310,6 +310,10 @@ const (
 	keyK = 'k'
 	keyL = 'l'
 
+	keyComma = ','
+	keyO     = 'o'
+	keyE     = 'e'
+
 	keyCtrlC  = 3
 	keyEscape = 27
 )
@@ -380,13 +384,13 @@ func (gm *GameManager) Run() {
 					}
 
 					switch r {
-					case keyW, keyK:
+					case keyW, keyK, keyComma:
 						session.Player.HandleUp()
 					case keyA, keyH:
 						session.Player.HandleLeft()
-					case keyS, keyJ:
+					case keyS, keyJ, keyO:
 						session.Player.HandleDown()
-					case keyD, keyL:
+					case keyD, keyL, keyE:
 						session.Player.HandleRight()
 					case keyCtrlC, keyEscape:
 						if g.SessionCount() == 1 {
