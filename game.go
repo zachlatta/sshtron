@@ -93,8 +93,6 @@ const (
 
 	playerRed     = color.FgRed
 	playerGreen   = color.FgGreen
-	playerYellow  = color.FgYellow
-	playerBlue    = color.FgBlue
 	playerMagenta = color.FgMagenta
 	playerCyan    = color.FgCyan
 
@@ -104,14 +102,12 @@ const (
 	PlayerRight
 )
 
-var playerColors = []color.Attribute{playerRed, playerGreen, playerYellow,
-	playerBlue, playerMagenta, playerCyan}
+var playerColors = []color.Attribute{playerRed, playerGreen, playerMagenta,
+	playerCyan}
 
 var playerBorderColors = map[color.Attribute]color.Attribute{
 	playerRed:     color.FgHiRed,
 	playerGreen:   color.FgHiGreen,
-	playerYellow:  color.FgHiYellow,
-	playerBlue:    color.FgHiBlue,
 	playerMagenta: color.FgHiMagenta,
 	playerCyan:    color.FgHiCyan,
 }
@@ -119,8 +115,6 @@ var playerBorderColors = map[color.Attribute]color.Attribute{
 var playerColorNames = map[color.Attribute]string{
 	playerRed:     "Red",
 	playerGreen:   "Green",
-	playerYellow:  "Yellow",
-	playerBlue:    "Blue",
 	playerMagenta: "Magenta",
 	playerCyan:    "Cyan",
 }
