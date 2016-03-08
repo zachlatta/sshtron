@@ -7,6 +7,7 @@ import (
 	"github.com/dustinkirkland/golang-petname"
 	"github.com/fatih/color"
 	"golang.org/x/crypto/ssh"
+	"io"
 	"math/rand"
 	"sort"
 	"time"
@@ -727,10 +728,12 @@ func (g *Game) Update(delta float64) {
 func (g *Game) Render(s *Session) {
 	worldStr := g.worldString(s)
 
-	fmt.Fprint(s, "\033[H\033[2J")
+	var b bytes.Buffer
+	b.WriteString("\033[H\033[2J")
+	b.WriteString(worldStr)
 
 	// Send over the rendered world
-	fmt.Fprint(s, worldStr)
+	io.Copy(s, &b)
 }
 
 func (g *Game) AddSession(s *Session) {
