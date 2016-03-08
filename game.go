@@ -42,7 +42,7 @@ func (h *Hub) Run(g *Game) {
 			h.Sessions[s] = struct{}{}
 		case s := <-h.Unregister:
 			if _, ok := h.Sessions[s]; ok {
-				fmt.Fprint(s, "\r\n\r\n~ End of Line ~ \r\n\r\n")
+				fmt.Fprint(s, "\r\n\r\n~ End of Line ~ \r\n\r\nRemember to use WASD to move!\r\n\r\n")
 
 				// Unhide the cursor
 				fmt.Fprint(s, "\033[?25h")
