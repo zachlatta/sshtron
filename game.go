@@ -665,7 +665,7 @@ func (g *Game) Run() {
 	//
 	// TODO: Implement diffing and only redraw when needed
 	go func() {
-		c := time.Tick(time.Second / 10)
+		c := time.Tick(time.Second / 15)
 		for range c {
 			g.Redraw <- struct{}{}
 		}
