@@ -4,13 +4,14 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/dustinkirkland/golang-petname"
-	"github.com/fatih/color"
-	"golang.org/x/crypto/ssh"
 	"io"
 	"math/rand"
 	"sort"
 	"time"
+
+	"github.com/dustinkirkland/golang-petname"
+	"github.com/fatih/color"
+	"golang.org/x/crypto/ssh"
 )
 
 type Hub struct {
@@ -197,6 +198,7 @@ func (p *Player) HandleDown() {
 func (p *Player) HandleRight() {
 	p.Direction = PlayerRight
 	p.Marker = playerRightRune
+	p.s.didAction()
 }
 
 func (p *Player) Score() int {
