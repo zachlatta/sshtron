@@ -178,24 +178,36 @@ func (p *Player) calculateScore(delta float64, playerCount int) float64 {
 }
 
 func (p *Player) HandleUp() {
+	if p.Direction == PlayerDown {
+		return
+	}
 	p.Direction = PlayerUp
 	p.Marker = playerUpRune
 	p.s.didAction()
 }
 
 func (p *Player) HandleLeft() {
+	if p.Direction == PlayerRight {
+		return
+	}
 	p.Direction = PlayerLeft
 	p.Marker = playerLeftRune
 	p.s.didAction()
 }
 
 func (p *Player) HandleDown() {
+	if p.Direction == PlayerUp {
+		return
+	}
 	p.Direction = PlayerDown
 	p.Marker = playerDownRune
 	p.s.didAction()
 }
 
 func (p *Player) HandleRight() {
+	if p.Direction == PlayerLeft {
+		return
+	}
 	p.Direction = PlayerRight
 	p.Marker = playerRightRune
 	p.s.didAction()
