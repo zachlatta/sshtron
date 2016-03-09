@@ -13,6 +13,19 @@ Escape or Ctrl+C to exit._
 **Code quality disclaimer:** _SSHTron was built in ~20 hours at
 [BrickHack 2](https://brickhack.io/). Here be dragons._
 
+## Alternate Servers
+
+### Europe (Frankfurt)
+
+    $ ssh eu.sshtron.zachlatta.com
+
+_Kindly provided by [@klausenbusk](https://github.com/klausenbusk)._
+
+### Providing a Server
+
+Want to provide a server for SSHTron? Open up an issue saying so and we'll make
+it happen :-).
+
 ## Running Your Own Copy
 
 Clone the project and `cd` into its directory. These instructions assume that
