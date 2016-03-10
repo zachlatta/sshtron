@@ -48,3 +48,5 @@ $ ./sshtron
 
 SSHTron is licensed under the MIT License. See the full license text in
 [`LICENSE`](LICENSE).
+
+fisher
