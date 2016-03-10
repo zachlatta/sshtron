@@ -314,6 +314,10 @@ const (
 	keyS = 's'
 	keyD = 'd'
 
+	keyZ = 'z'
+	keyQ = 'q'
+	// keyS and keyD are already defined
+
 	keyH = 'h'
 	keyJ = 'j'
 	keyK = 'k'
@@ -393,9 +397,9 @@ func (gm *GameManager) Run() {
 					}
 
 					switch r {
-					case keyW, keyK, keyComma:
+					case keyW, keyZ, keyK, keyComma:
 						session.Player.HandleUp()
-					case keyA, keyH:
+					case keyA, keyQ, keyH:
 						session.Player.HandleLeft()
 					case keyS, keyJ, keyO:
 						session.Player.HandleDown()
