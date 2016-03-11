@@ -44,6 +44,17 @@ $ go get && go build
 $ ./sshtron
 ```
 
+## CVE-2016-0777
+
+[CVE-2016-0777](https://www.qualys.com/2016/01/14/cve-2016-0777-cve-2016-0778/openssh-cve-2016-0777-cve-2016-0778.txt)
+revealed two SSH client vulnerabilities that can be exploited by a malicious SSH server. While SSHTron does not exploit
+these vulnerabilities, you should still patch your client before you play. SSHTron is open source, but the server
+could always be running a modified version of SSHTron that does exploit the vulnerabilities described
+in [CVE-2016-0777](https://www.qualys.com/2016/01/14/cve-2016-0777-cve-2016-0778/openssh-cve-2016-0777-cve-2016-0778.txt).
+
+If you haven't yet patched your SSH client, you can follow
+[these instructions](https://www.jacobtomlinson.co.uk/quick%20tip/2016/01/15/fixing-ssh-vulnerability-CVE-2016-0777/) to do so now.
+
 ## License
 
 SSHTron is licensed under the MIT License. See the full license text in
