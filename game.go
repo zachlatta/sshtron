@@ -1,59 +1,15 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"github.com/dustinkirkland/golang-petname"
 	"github.com/fatih/color"
-	"golang.org/x/crypto/ssh"
 	"io"
 	"math/rand"
 	"sort"
 	"time"
 )
-
-type Hub struct {
-	Sessions   map[*Session]struct{}
-	Redraw     chan struct{}
-	Register   chan *Session
-	Unregister chan *Session
-}
-
-func NewHub() Hub {
-	return Hub{
-		Sessions:   make(map[*Session]struct{}),
-		Redraw:     make(chan struct{}),
-		Register:   make(chan *Session),
-		Unregister: make(chan *Session),
-	}
-}
-
-func (h *Hub) Run(g *Game) {
-	for {
-		select {
-		case <-h.Redraw:
-			for s := range h.Sessions {
-				go g.Render(s)
-			}
-		case s := <-h.Register:
-			// Hide the cursor
-			fmt.Fprint(s, "\033[?25l")
-
-			h.Sessions[s] = struct{}{}
-		case s := <-h.Unregister:
-			if _, ok := h.Sessions[s]; ok {
-				fmt.Fprint(s, "\r\n\r\n~ End of Line ~ \r\n\r\nRemember to use WASD to move!\r\n\r\n")
-
-				// Unhide the cursor
-				fmt.Fprint(s, "\033[?25h")
-
-				delete(h.Sessions, s)
-				s.c.Close()
-			}
-		}
-	}
-}
 
 type Position struct {
 	X float64
@@ -128,15 +84,17 @@ type PlayerTrailSegment struct {
 type Player struct {
 	s *Session
 
-	CreatedAt time.Time
-	Direction PlayerDirection
-	Marker    rune
-	Color     color.Attribute
-	Pos       *Position
+	CreatedAt  time.Time
+	Direction  PlayerDirection
+	Marker     rune
+	LastAction time.Time
+	Color      color.Attribute
+	Pos        *Position
 
 	Trail []PlayerTrailSegment
 
-	score float64
+	score     float64
+	HighScore int
 }
 
 // NewPlayer creates a new player. If color is below 1, a random color is chosen
@@ -153,12 +111,13 @@ func NewPlayer(s *Session, worldWidth, worldHeight int,
 	}
 
 	return &Player{
-		s:         s,
-		CreatedAt: time.Now(),
-		Marker:    playerDownRune,
-		Direction: PlayerDown,
-		Color:     color,
-		Pos:       &Position{startX, startY},
+		s:          s,
+		CreatedAt:  time.Now(),
+		Marker:     playerDownRune,
+		LastAction: time.Now(),
+		Direction:  PlayerDown,
+		Color:      color,
+		Pos:        &Position{startX, startY},
 	}
 }
 
@@ -179,26 +138,29 @@ func (p *Player) calculateScore(delta float64, playerCount int) float64 {
 func (p *Player) HandleUp() {
 	p.Direction = PlayerUp
 	p.Marker = playerUpRune
-	p.s.didAction()
+	p.didAction()
 }
 
 func (p *Player) HandleLeft() {
 	p.Direction = PlayerLeft
 	p.Marker = playerLeftRune
-	p.s.didAction()
+	p.didAction()
 }
 
 func (p *Player) HandleDown() {
 	p.Direction = PlayerDown
 	p.Marker = playerDownRune
-	p.s.didAction()
+	p.didAction()
 }
 
 func (p *Player) HandleRight() {
 	p.Direction = PlayerRight
 	p.Marker = playerRightRune
+	p.didAction()
 }
-
+func (p *Player) didAction() {
+	p.LastAction = time.Now()
+}
 func (p *Player) Score() int {
 	return int(p.score)
 }
@@ -280,178 +242,30 @@ func (slice ByColor) Swap(i, j int) {
 	slice[i], slice[j] = slice[j], slice[i]
 }
 
-type TileType int
-
-const (
-	TileGrass TileType = iota
-	TileBlocker
-)
-
-type Tile struct {
-	Type TileType
-}
-
-const (
-	gameWidth  = 78
-	gameHeight = 22
-
-	keyW = 'w'
-	keyA = 'a'
-	keyS = 's'
-	keyD = 'd'
-
-	keyH = 'h'
-	keyJ = 'j'
-	keyK = 'k'
-	keyL = 'l'
-
-	keyComma = ','
-	keyO     = 'o'
-	keyE     = 'e'
-
-	keyCtrlC  = 3
-	keyEscape = 27
-)
-
-type GameManager struct {
-	Games         map[string]*Game
-	HandleChannel chan ssh.Channel
-}
-
-func NewGameManager() *GameManager {
-	return &GameManager{
-		Games:         map[string]*Game{},
-		HandleChannel: make(chan ssh.Channel),
-	}
-}
-
-// getGameWithAvailability returns a reference to a game with available spots for
-// players. If one does not exist, nil is returned.
-func (gm *GameManager) getGameWithAvailability() *Game {
-	var g *Game
-
-	for _, game := range gm.Games {
-		spots := game.AvailableColors()
-		if len(spots) > 0 {
-			g = game
-			break
-		}
-	}
-
-	return g
-}
-
-func (gm *GameManager) SessionCount() int {
-	sum := 0
-	for _, game := range gm.Games {
-		sum += game.SessionCount()
-	}
-	return sum
-}
-
-func (gm *GameManager) GameCount() int {
-	return len(gm.Games)
-}
-
-func (gm *GameManager) Run() {
-	for {
-		select {
-		case c := <-gm.HandleChannel:
-			g := gm.getGameWithAvailability()
-			if g == nil {
-				g = NewGame(gameWidth, gameHeight)
-				gm.Games[g.Name] = g
-
-				go g.Run()
-			}
-
-			session := NewSession(c, g.WorldWidth(), g.WorldHeight(),
-				g.AvailableColors()[0])
-			g.AddSession(session)
-
-			go func() {
-				reader := bufio.NewReader(c)
-				for {
-					r, _, err := reader.ReadRune()
-					if err != nil {
-						fmt.Println(err)
-						break
-					}
-
-					switch r {
-					case keyW, keyK, keyComma:
-						session.Player.HandleUp()
-					case keyA, keyH:
-						session.Player.HandleLeft()
-					case keyS, keyJ, keyO:
-						session.Player.HandleDown()
-					case keyD, keyL, keyE:
-						session.Player.HandleRight()
-					case keyCtrlC, keyEscape:
-						if g.SessionCount() == 1 {
-							delete(gm.Games, g.Name)
-						}
-
-						g.RemoveSession(session)
-					}
-				}
-			}()
-		}
-	}
-}
-
 type Game struct {
 	Name      string
 	Redraw    chan struct{}
 	HighScore int
 
-	// Top left is 0,0
-	level [][]Tile
-	hub   Hub
+	width    int
+	height   int
+	Sessions map[*Session]struct{}
 }
 
 func NewGame(worldWidth, worldHeight int) *Game {
-	g := &Game{
-		Name:   petname.Generate(1, ""),
-		Redraw: make(chan struct{}),
-		hub:    NewHub(),
+	return &Game{
+		Name:     petname.Generate(1, ""),
+		Redraw:   make(chan struct{}),
+		Sessions: make(map[*Session]struct{}),
+		width:    worldWidth,
+		height:   worldHeight,
 	}
-	g.initalizeLevel(worldWidth, worldHeight)
-
-	return g
-}
-
-func (g *Game) initalizeLevel(width, height int) {
-	g.level = make([][]Tile, width)
-	for x := range g.level {
-		g.level[x] = make([]Tile, height)
-	}
-
-	// Default world to grass
-	for x := range g.level {
-		for y := range g.level[x] {
-			g.setTileType(Position{float64(x), float64(y)}, TileGrass)
-		}
-	}
-}
-
-func (g *Game) setTileType(pos Position, tileType TileType) error {
-	outOfBoundsErr := "The given %s value (%s) is out of bounds"
-	if pos.RoundX() > len(g.level) || pos.RoundX() < 0 {
-		return fmt.Errorf(outOfBoundsErr, "X", pos.X)
-	} else if pos.RoundY() > len(g.level[pos.RoundX()]) || pos.RoundY() < 0 {
-		return fmt.Errorf(outOfBoundsErr, "Y", pos.Y)
-	}
-
-	g.level[pos.RoundX()][pos.RoundY()].Type = tileType
-
-	return nil
 }
 
 func (g *Game) players() map[*Player]*Session {
 	players := make(map[*Player]*Session)
 
-	for session := range g.hub.Sessions {
+	for session := range g.Sessions {
 		players[session.Player] = session
 	}
 
@@ -466,15 +280,12 @@ const (
 	topRight       = '╗'
 	bottomRight    = '╝'
 	bottomLeft     = '╚'
-
-	grass   = ' '
-	blocker = '■'
 )
 
 // Warning: this will only work with square worlds
 func (g *Game) worldString(s *Session) string {
-	worldWidth := len(g.level)
-	worldHeight := len(g.level[0])
+	worldWidth := g.WorldWidth()
+	worldHeight := g.WorldHeight()
 
 	// Create two dimensional slice of strings to represent the world. It's two
 	// characters larger in each direction to accomodate for walls.
@@ -504,7 +315,7 @@ func (g *Game) worldString(s *Session) string {
 	scoreStr := fmt.Sprintf(
 		" Score: %d : Your High Score: %d : Game High Score: %d ",
 		s.Player.Score(),
-		s.HighScore,
+		s.Player.HighScore,
 		g.HighScore,
 	)
 	for i, r := range scoreStr {
@@ -566,17 +377,9 @@ func (g *Game) worldString(s *Session) string {
 			borderColorizer(string(r))
 	}
 
-	// Load the level into the string slice
-	for x := 0; x < worldWidth; x++ {
-		for y := 0; y < worldHeight; y++ {
-			tile := g.level[x][y]
-
-			switch tile.Type {
-			case TileGrass:
-				strWorld[x+1][y+1] = string(grass)
-			case TileBlocker:
-				strWorld[x+1][y+1] = string(blocker)
-			}
+	for x := 1; x <= worldWidth; x++ {
+		for y := 1; y <= worldHeight; y++ {
+			strWorld[x][y] = " "
 		}
 	}
 
@@ -611,11 +414,11 @@ func (g *Game) worldString(s *Session) string {
 }
 
 func (g *Game) WorldWidth() int {
-	return len(g.level)
+	return g.width
 }
 
 func (g *Game) WorldHeight() int {
-	return len(g.level[0])
+	return g.height
 }
 
 func (g *Game) AvailableColors() []color.Attribute {
@@ -639,17 +442,10 @@ func (g *Game) AvailableColors() []color.Attribute {
 }
 
 func (g *Game) SessionCount() int {
-	return len(g.hub.Sessions)
+	return len(g.Sessions)
 }
 
 func (g *Game) Run() {
-	// Proxy g.Redraw's channel to g.hub.Redraw
-	go func() {
-		for {
-			g.hub.Redraw <- <-g.Redraw
-		}
-	}()
-
 	// Run game loop
 	go func() {
 		var lastUpdate time.Time
@@ -668,11 +464,11 @@ func (g *Game) Run() {
 	go func() {
 		c := time.Tick(time.Second / 10)
 		for range c {
-			g.Redraw <- struct{}{}
+			for s := range g.Sessions {
+				go g.Render(s)
+			}
 		}
 	}()
-
-	g.hub.Run(g)
 }
 
 // Update is the main game logic loop. Delta is the time since the last update
@@ -687,8 +483,8 @@ func (g *Game) Update(delta float64) {
 		player.Update(g, delta)
 
 		// Update session high score, if applicable
-		if player.Score() > session.HighScore {
-			session.HighScore = player.Score()
+		if player.Score() > player.HighScore {
+			player.HighScore = player.Score()
 		}
 
 		// Update global high score, if applicable
@@ -698,13 +494,13 @@ func (g *Game) Update(delta float64) {
 
 		// Restart the player if they're out of bounds
 		pos := player.Pos
-		if pos.RoundX() < 0 || pos.RoundX() >= len(g.level) ||
-			pos.RoundY() < 0 || pos.RoundY() >= len(g.level[0]) {
+		if pos.RoundX() < 0 || pos.RoundX() >= g.WorldWidth() ||
+			pos.RoundY() < 0 || pos.RoundY() >= g.WorldHeight() {
 			session.StartOver(g.WorldWidth(), g.WorldHeight())
 		}
 
 		// Kick the player if they've timed out
-		if time.Now().Sub(session.LastAction) > playerTimeout {
+		if time.Now().Sub(player.LastAction) > playerTimeout {
 			fmt.Fprint(session, "\r\n\r\nYou were terminated due to inactivity\r\n")
 			g.RemoveSession(session)
 			return
@@ -737,46 +533,20 @@ func (g *Game) Render(s *Session) {
 }
 
 func (g *Game) AddSession(s *Session) {
-	g.hub.Register <- s
+	// Hide the cursor
+	fmt.Fprint(s, "\033[?25l")
+
+	g.Sessions[s] = struct{}{}
 }
 
 func (g *Game) RemoveSession(s *Session) {
-	g.hub.Unregister <- s
-}
+	if _, ok := g.Sessions[s]; ok {
+		fmt.Fprint(s, "\r\n\r\n~ End of Line ~ \r\n\r\nRemember to use WASD to move!\r\n\r\n")
 
-type Session struct {
-	c ssh.Channel
+		// Unhide the cursor
+		fmt.Fprint(s, "\033[?25h")
 
-	LastAction time.Time
-	HighScore  int
-	Player     *Player
-}
-
-func NewSession(c ssh.Channel, worldWidth, worldHeight int,
-	color color.Attribute) *Session {
-
-	s := Session{c: c, LastAction: time.Now()}
-	s.newGame(worldWidth, worldHeight, color)
-
-	return &s
-}
-
-func (s *Session) newGame(worldWidth, worldHeight int, color color.Attribute) {
-	s.Player = NewPlayer(s, worldWidth, worldHeight, color)
-}
-
-func (s *Session) didAction() {
-	s.LastAction = time.Now()
-}
-
-func (s *Session) StartOver(worldWidth, worldHeight int) {
-	s.newGame(worldWidth, worldHeight, s.Player.Color)
-}
-
-func (s *Session) Read(p []byte) (int, error) {
-	return s.c.Read(p)
-}
-
-func (s *Session) Write(p []byte) (int, error) {
-	return s.c.Write(p)
+		delete(g.Sessions, s)
+		s.c.Close()
+	}
 }
