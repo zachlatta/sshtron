@@ -3,12 +3,13 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/dustinkirkland/golang-petname"
-	"github.com/fatih/color"
 	"io"
 	"math/rand"
 	"sort"
 	"time"
+
+	"github.com/dustinkirkland/golang-petname"
+	"github.com/fatih/color"
 )
 
 type Position struct {
@@ -136,31 +137,45 @@ func (p *Player) calculateScore(delta float64, playerCount int) float64 {
 }
 
 func (p *Player) HandleUp() {
+	if p.Direction == PlayerDown {
+		return
+	}
 	p.Direction = PlayerUp
 	p.Marker = playerUpRune
 	p.didAction()
 }
 
 func (p *Player) HandleLeft() {
+	if p.Direction == PlayerRight {
+		return
+	}
 	p.Direction = PlayerLeft
 	p.Marker = playerLeftRune
 	p.didAction()
 }
 
 func (p *Player) HandleDown() {
+	if p.Direction == PlayerUp {
+		return
+	}
 	p.Direction = PlayerDown
 	p.Marker = playerDownRune
 	p.didAction()
 }
 
 func (p *Player) HandleRight() {
+	if p.Direction == PlayerLeft {
+		return
+	}
 	p.Direction = PlayerRight
 	p.Marker = playerRightRune
 	p.didAction()
 }
+
 func (p *Player) didAction() {
 	p.LastAction = time.Now()
 }
+
 func (p *Player) Score() int {
 	return int(p.score)
 }
