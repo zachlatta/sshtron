@@ -68,7 +68,7 @@ const (
 	keyEscape = 27
 )
 
-func (gm *GameManager) HandleChannel(c io.ReadWriteCloser) {
+func (gm *GameManager) HandleChannel(c io.ReadWriteCloser, wait bool) {
 	g := gm.getGameWithAvailability()
 	if g == nil {
 		g = NewGame(gameWidth, gameHeight)
@@ -81,7 +81,7 @@ func (gm *GameManager) HandleChannel(c io.ReadWriteCloser) {
 		g.AvailableColors()[0])
 	g.AddSession(session)
 
-	go func() {
+	handleSession := func() {
 		reader := bufio.NewReader(c)
 		for {
 			r, _, err := reader.ReadRune()
@@ -107,7 +107,13 @@ func (gm *GameManager) HandleChannel(c io.ReadWriteCloser) {
 				g.RemoveSession(session)
 			}
 		}
-	}()
+	}
+
+	if wait {
+		handleSession()
+	} else {
+		go handleSession()
+	}
 }
 
 type Session struct {

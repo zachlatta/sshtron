@@ -7,7 +7,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"time"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -69,7 +68,7 @@ func handler(conn net.Conn, gm *GameManager, config *ssh.ServerConfig) {
 			}
 		}(requests)
 
-		gm.HandleChannel(channel)
+		gm.HandleChannel(channel, false)
 	}
 }
 
@@ -100,10 +99,8 @@ func main() {
 	if singlePlayer {
 		gm := NewGameManager()
 		tc := NewTermChannel()
-		gm.HandleChannel(tc)
-		for {
-			time.Sleep(time.Second)
-		}
+		defer tc.Restore()
+		gm.HandleChannel(tc, true)
 	} else {
 
 		sshPort := port(sshPortOpt, sshPortEnv, defaultSshPort)
