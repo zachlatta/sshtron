@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+
 	"github.com/fatih/color"
 	"golang.org/x/crypto/ssh"
 )

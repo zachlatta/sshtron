@@ -3,11 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
-	"golang.org/x/crypto/ssh"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
+
+	"golang.org/x/crypto/ssh"
 )
 
 const (
@@ -129,7 +130,7 @@ func main() {
 	if err != nil {
 		panic("failed to listen for connection")
 	}
-  gm := NewGameManager()
+	gm := NewGameManager()
 	for {
 		nConn, err := listener.Accept()
 		if err != nil {
