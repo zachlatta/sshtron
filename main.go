@@ -7,6 +7,8 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/exec"
+	"time"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -90,53 +92,72 @@ func main() {
 
 	var sshPortOpt string
 	var httpPortOpt string
+	var singlePlayer bool
 	flag.StringVar(&sshPortOpt, "ssh-port", "", "set the ssh port to use")
 	flag.StringVar(&httpPortOpt, "http-port", "", "set the http port to use")
+	flag.BoolVar(&singlePlayer, "single", false, "play in local terminal")
 	flag.Parse()
 
-	sshPort := port(sshPortOpt, sshPortEnv, defaultSshPort)
-	httpPort := port(httpPortOpt, httpPortEnv, defaultHttpPort)
+	if singlePlayer {
+		// disable input buffering
+		exec.Command("stty", "-F", "/dev/tty", "cbreak", "min", "1").Run()
+		// do not display entered characters on the screen
+		exec.Command("stty", "-F", "/dev/tty", "-echo").Run()
+		// restore the echoing state when exiting
+		defer exec.Command("stty", "-F", "/dev/tty", "echo").Run()
 
-	// Everyone can login!
-	config := &ssh.ServerConfig{
-		NoClientAuth: true,
-	}
+		gm := NewGameManager()
+		tc := NewTermChannel()
+		gm.HandleChannel(tc)
+		for {
+			time.Sleep(time.Second)
+		}
+	} else {
 
-	privateBytes, err := ioutil.ReadFile("id_rsa")
-	if err != nil {
-		panic("Failed to load private key")
-	}
+		sshPort := port(sshPortOpt, sshPortEnv, defaultSshPort)
+		httpPort := port(httpPortOpt, httpPortEnv, defaultHttpPort)
 
-	private, err := ssh.ParsePrivateKey(privateBytes)
-	if err != nil {
-		panic("Failed to parse private key")
-	}
-
-	config.AddHostKey(private)
-
-	fmt.Printf(
-		"Listening on port %s for SSH and port %s for HTTP...\n",
-		sshPort,
-		httpPort,
-	)
-
-	go func() {
-		panic(http.ListenAndServe(httpPort, http.FileServer(http.Dir("./static/"))))
-	}()
-
-	// Once a ServerConfig has been configured, connections can be
-	// accepted.
-	listener, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0%s", sshPort))
-	if err != nil {
-		panic("failed to listen for connection")
-	}
-	gm := NewGameManager()
-	for {
-		nConn, err := listener.Accept()
-		if err != nil {
-			panic("failed to accept incoming connection")
+		// Everyone can login!
+		config := &ssh.ServerConfig{
+			NoClientAuth: true,
 		}
 
-		go handler(nConn, gm, config)
+		privateBytes, err := ioutil.ReadFile("id_rsa")
+		if err != nil {
+			panic("Failed to load private key")
+		}
+
+		private, err := ssh.ParsePrivateKey(privateBytes)
+		if err != nil {
+			panic("Failed to parse private key")
+		}
+
+		config.AddHostKey(private)
+
+		fmt.Printf(
+			"Listening on port %s for SSH and port %s for HTTP...\n",
+			sshPort,
+			httpPort,
+		)
+
+		go func() {
+			panic(http.ListenAndServe(httpPort, http.FileServer(http.Dir("./static/"))))
+		}()
+
+		// Once a ServerConfig has been configured, connections can be
+		// accepted.
+		listener, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0%s", sshPort))
+		if err != nil {
+			panic("failed to listen for connection")
+		}
+		gm := NewGameManager()
+		for {
+			nConn, err := listener.Accept()
+			if err != nil {
+				panic("failed to accept incoming connection")
+			}
+
+			go handler(nConn, gm, config)
+		}
 	}
 }

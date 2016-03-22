@@ -3,9 +3,9 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 
 	"github.com/fatih/color"
-	"golang.org/x/crypto/ssh"
 )
 
 type GameManager struct {
@@ -68,7 +68,7 @@ const (
 	keyEscape = 27
 )
 
-func (gm *GameManager) HandleChannel(c ssh.Channel) {
+func (gm *GameManager) HandleChannel(c io.ReadWriteCloser) {
 	g := gm.getGameWithAvailability()
 	if g == nil {
 		g = NewGame(gameWidth, gameHeight)
@@ -111,12 +111,12 @@ func (gm *GameManager) HandleChannel(c ssh.Channel) {
 }
 
 type Session struct {
-	c ssh.Channel
+	c io.ReadWriteCloser
 
 	Player *Player
 }
 
-func NewSession(c ssh.Channel, worldWidth, worldHeight int,
+func NewSession(c io.ReadWriteCloser, worldWidth, worldHeight int,
 	color color.Attribute) *Session {
 
 	s := Session{c: c}
