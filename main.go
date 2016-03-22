@@ -99,7 +99,6 @@ func main() {
 	if singlePlayer {
 		gm := NewGameManager()
 		tc := NewTermChannel()
-		defer tc.Restore()
 		gm.HandleChannel(tc, true)
 	} else {
 

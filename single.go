@@ -15,8 +15,8 @@ func NewTermChannel() *TermChannel {
 	return &TermChannel{t}
 }
 
-func (tc TermChannel) Restore() {
-	tc.T.Restore()
+func (tc TermChannel) Restore() error {
+	return tc.T.Restore()
 }
 
 func (tc TermChannel) Read(data []byte) (int, error) {
@@ -28,5 +28,6 @@ func (tc TermChannel) Write(data []byte) (int, error) {
 }
 
 func (tc TermChannel) Close() error {
+	tc.T.Restore()
 	return tc.T.Close()
 }
