@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"golang.org/x/crypto/ssh"
 	"io/ioutil"
@@ -70,18 +71,30 @@ func handler(conn net.Conn, gm *GameManager, config *ssh.ServerConfig) {
 	}
 }
 
-func port(env, def string) string {
-	port := os.Getenv(env)
-	if port == "" {
-		port = def
+func port(opt, env, def string) string {
+	var port string
+	if opt != "" {
+		port = opt
+	} else {
+		port = os.Getenv(env)
+		if port == "" {
+			port = def
+		}
 	}
 
 	return fmt.Sprintf(":%s", port)
 }
 
 func main() {
-	sshPort := port(sshPortEnv, defaultSshPort)
-	httpPort := port(httpPortEnv, defaultHttpPort)
+
+	var sshPortOpt string
+	var httpPortOpt string
+	flag.StringVar(&sshPortOpt, "ssh-port", "", "set the ssh port to use")
+	flag.StringVar(&httpPortOpt, "http-port", "", "set the http port to use")
+	flag.Parse()
+
+	sshPort := port(sshPortOpt, sshPortEnv, defaultSshPort)
+	httpPort := port(httpPortOpt, httpPortEnv, defaultHttpPort)
 
 	// Everyone can login!
 	config := &ssh.ServerConfig{
