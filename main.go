@@ -7,7 +7,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"os/exec"
 	"time"
 
 	"golang.org/x/crypto/ssh"
@@ -99,13 +98,6 @@ func main() {
 	flag.Parse()
 
 	if singlePlayer {
-		// disable input buffering
-		exec.Command("stty", "-F", "/dev/tty", "cbreak", "min", "1").Run()
-		// do not display entered characters on the screen
-		exec.Command("stty", "-F", "/dev/tty", "-echo").Run()
-		// restore the echoing state when exiting
-		defer exec.Command("stty", "-F", "/dev/tty", "echo").Run()
-
 		gm := NewGameManager()
 		tc := NewTermChannel()
 		gm.HandleChannel(tc)
