@@ -1,10 +1,10 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"io"
 
+	gc "github.com/dragonfax/goncurses"
 	"github.com/fatih/color"
 )
 
@@ -68,7 +68,7 @@ const (
 	keyEscape = 27
 )
 
-func (gm *GameManager) HandleChannel(c io.ReadWriteCloser, wait bool) {
+func (gm *GameManager) HandleChannel(c *gc.Screen, wait bool) {
 	g := gm.getGameWithAvailability()
 	if g == nil {
 		g = NewGame(gameWidth, gameHeight)
@@ -80,11 +80,17 @@ func (gm *GameManager) HandleChannel(c io.ReadWriteCloser, wait bool) {
 	session := NewSession(c, g.WorldWidth(), g.WorldHeight(),
 		g.AvailableColors()[0])
 	g.AddSession(session)
+	defer g.RemoveSession(session)
+
+	window, err := NewWindowSP(c, 0, 0, 0, 0)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
 	handleSession := func() {
-		reader := bufio.NewReader(c)
 		for {
-			r, _, err := reader.ReadRune()
+			r, err := window.GetCh()
 			if err != nil {
 				fmt.Println(err)
 				break
@@ -103,8 +109,6 @@ func (gm *GameManager) HandleChannel(c io.ReadWriteCloser, wait bool) {
 				if g.SessionCount() == 1 {
 					delete(gm.Games, g.Name)
 				}
-
-				g.RemoveSession(session)
 			}
 		}
 	}
@@ -122,7 +126,7 @@ type Session struct {
 	Player *Player
 }
 
-func NewSession(c io.ReadWriteCloser, worldWidth, worldHeight int,
+func NewSession(c *gc.Screen, worldWidth, worldHeight int,
 	color color.Attribute) *Session {
 
 	s := Session{c: c}

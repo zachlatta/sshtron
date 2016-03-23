@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 
+	gc "github.com/dragonfax/goncurses"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -68,8 +69,46 @@ func handler(conn net.Conn, gm *GameManager, config *ssh.ServerConfig) {
 			}
 		}(requests)
 
-		gm.HandleChannel(channel, false)
+		outFileWriter, inFileReader, err := readWriterToFileDescriptors(channel)
+
+		screen, err := gc.NewTerm("xterm", outFileWriter, inFileReader)
+		if err != nil {
+			fmt.Println("failed to start new curses terminal", err)
+			return
+		}
+
+		gm.HandleChannel(screen, false)
 	}
+}
+
+func readWriterToFileDescriptors(channel) (*os.File, *os.File, error) {
+	outFileReader, outFileWriter, err := os.Pipe()
+	if err != nil {
+		return nil.nil, err
+	}
+
+	inFileReader, inFileWriter, err := os.Pipe()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	go func() {
+		b := make([]byte, 1, 1)
+		for {
+			channel.Read(b)
+			inFileWriter.Write(b)
+		}
+	}()
+
+	go func() {
+		b := make([]byte, 1, 1)
+		for {
+			outFileReader.Read(b)
+			channel.Write(b)
+		}
+	}()
+
+	return outFileWriter, inFileReader, nil
 }
 
 func port(opt, env, def string) string {
@@ -87,6 +126,12 @@ func port(opt, env, def string) string {
 }
 
 func main() {
+
+	_, err := gc.Init()
+	if err != nil {
+		panic(err)
+	}
+	defer gc.End()
 
 	var sshPortOpt string
 	var httpPortOpt string
