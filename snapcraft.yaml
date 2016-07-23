@@ -1,0 +1,24 @@
+---
+name: sshtron
+version: 1.0
+summary: Multiplayer Tron via SSH
+description: >
+    Multiplayer Tron game, accessible via SSH.
+    Once it's installed, ssh to port 2022, and steer using the W A S D keys.
+confinement: strict
+apps:
+    sshtron:
+        command: bin/sshtron-server
+        daemon: simple
+        plugs: [network-bind]
+
+parts:
+    sshtron:
+        plugin: go
+        source: git://github.com/zachlatta/sshtron
+    glue:
+        plugin: copy
+        files:
+            sshtron.sh: bin/sshtron-server
+        stage-packages:
+            - openssh-client
