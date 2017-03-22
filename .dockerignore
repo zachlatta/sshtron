@@ -1,0 +1,2 @@
+# Ignore the already generated RSA key-pair
+id_rsa*

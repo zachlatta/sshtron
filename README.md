@@ -31,6 +31,20 @@ $ go get && go build
 $ ./sshtron
 ```
 
+## Running under a Docker container
+
+Clone the project and `cd` into its directory.
+
+```sh
+# Build the sshtron Docker image
+$ docker build -t sshtron .
+
+# Spin up the container with always-restart policy
+$ docker run -t -d -p 2022:2022 --restart always --name sshtron sshtron
+```
+
+For RaspberryPi, change the Base Image in `Dockerfile` from `golang:latest` to `apicht/rpi-golang:latest`.
+
 ## CVE-2016-0777
 
 [CVE-2016-0777](https://www.qualys.com/2016/01/14/cve-2016-0777-cve-2016-0778/openssh-cve-2016-0777-cve-2016-0778.txt)
