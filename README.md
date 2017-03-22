@@ -36,14 +36,14 @@ $ ./sshtron
 Clone the project and `cd` into its directory.
 
 ```sh
-# Build the sshtron Docker image
+# Build the SSHTron Docker image
 $ docker build -t sshtron .
 
 # Spin up the container with always-restart policy
 $ docker run -t -d -p 2022:2022 --restart always --name sshtron sshtron
 ```
 
-For RaspberryPi, change the Base Image in `Dockerfile` from `golang:latest` to `apicht/rpi-golang:latest`.
+For Raspberry Pi, change the base image in `Dockerfile` from `golang:latest` to `apicht/rpi-golang:latest`.
 
 ## CVE-2016-0777
 
