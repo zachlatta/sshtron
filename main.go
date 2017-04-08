@@ -66,7 +66,7 @@ func handler(conn net.Conn, gm *GameManager, config *ssh.ServerConfig) {
 			}
 		}(requests)
 
-		gm.HandleChannel <- channel
+		gm.HandleChannel(channel)
 	}
 }
 
@@ -100,10 +100,6 @@ func main() {
 
 	config.AddHostKey(private)
 
-	// Create the GameManager
-	gm := NewGameManager()
-	go gm.Run()
-
 	fmt.Printf(
 		"Listening on port %s for SSH and port %s for HTTP...\n",
 		sshPort,
@@ -120,7 +116,7 @@ func main() {
 	if err != nil {
 		panic("failed to listen for connection")
 	}
-
+  gm := NewGameManager()
 	for {
 		nConn, err := listener.Accept()
 		if err != nil {
