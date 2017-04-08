@@ -1,12 +1,15 @@
 package main
 
 import (
+	"flag"
 	"fmt"
-	"golang.org/x/crypto/ssh"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
+
+	gc "github.com/dragonfax/goncurses"
+	"golang.org/x/crypto/ssh"
 )
 
 const (
@@ -66,67 +69,128 @@ func handler(conn net.Conn, gm *GameManager, config *ssh.ServerConfig) {
 			}
 		}(requests)
 
-		gm.HandleChannel <- channel
+		outFileWriter, inFileReader, err := readWriterToFileDescriptors(channel)
+
+		screen, err := gc.NewTerm("xterm", outFileWriter, inFileReader)
+		if err != nil {
+			fmt.Println("failed to start new curses terminal", err)
+			return
+		}
+
+		gm.HandleChannel(screen, false)
 	}
 }
 
-func port(env, def string) string {
-	port := os.Getenv(env)
-	if port == "" {
-		port = def
+func readWriterToFileDescriptors(channel) (*os.File, *os.File, error) {
+	outFileReader, outFileWriter, err := os.Pipe()
+	if err != nil {
+		return nil.nil, err
+	}
+
+	inFileReader, inFileWriter, err := os.Pipe()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	go func() {
+		b := make([]byte, 1, 1)
+		for {
+			channel.Read(b)
+			inFileWriter.Write(b)
+		}
+	}()
+
+	go func() {
+		b := make([]byte, 1, 1)
+		for {
+			outFileReader.Read(b)
+			channel.Write(b)
+		}
+	}()
+
+	return outFileWriter, inFileReader, nil
+}
+
+func port(opt, env, def string) string {
+	var port string
+	if opt != "" {
+		port = opt
+	} else {
+		port = os.Getenv(env)
+		if port == "" {
+			port = def
+		}
 	}
 
 	return fmt.Sprintf(":%s", port)
 }
 
 func main() {
-	sshPort := port(sshPortEnv, defaultSshPort)
-	httpPort := port(httpPortEnv, defaultHttpPort)
 
-	// Everyone can login!
-	config := &ssh.ServerConfig{
-		NoClientAuth: true,
-	}
-
-	privateBytes, err := ioutil.ReadFile("id_rsa")
+	_, err := gc.Init()
 	if err != nil {
-		panic("Failed to load private key")
+		panic(err)
 	}
+	defer gc.End()
 
-	private, err := ssh.ParsePrivateKey(privateBytes)
-	if err != nil {
-		panic("Failed to parse private key")
-	}
+	var sshPortOpt string
+	var httpPortOpt string
+	var singlePlayer bool
+	flag.StringVar(&sshPortOpt, "ssh-port", "", "set the ssh port to use")
+	flag.StringVar(&httpPortOpt, "http-port", "", "set the http port to use")
+	flag.BoolVar(&singlePlayer, "single", false, "play in local terminal")
+	flag.Parse()
 
-	config.AddHostKey(private)
+	if singlePlayer {
+		gm := NewGameManager()
+		tc := NewTermChannel()
+		gm.HandleChannel(tc, true)
+	} else {
 
-	// Create the GameManager
-	gm := NewGameManager()
-	go gm.Run()
+		sshPort := port(sshPortOpt, sshPortEnv, defaultSshPort)
+		httpPort := port(httpPortOpt, httpPortEnv, defaultHttpPort)
 
-	fmt.Printf(
-		"Listening on port %s for SSH and port %s for HTTP...\n",
-		sshPort,
-		httpPort,
-	)
-
-	go func() {
-		panic(http.ListenAndServe(httpPort, http.FileServer(http.Dir("./static/"))))
-	}()
-
-	// Once a ServerConfig has been configured, connections can be
-	// accepted.
-	listener, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0%s", sshPort))
-	if err != nil {
-		panic("failed to listen for connection")
-	}
-
-	for {
-		nConn, err := listener.Accept()
-		if err != nil {
-			panic("failed to accept incoming connection")
+		// Everyone can login!
+		config := &ssh.ServerConfig{
+			NoClientAuth: true,
 		}
 
-		go handler(nConn, gm, config)
+		privateBytes, err := ioutil.ReadFile("id_rsa")
+		if err != nil {
+			panic("Failed to load private key")
+		}
+
+		private, err := ssh.ParsePrivateKey(privateBytes)
+		if err != nil {
+			panic("Failed to parse private key")
+		}
+
+		config.AddHostKey(private)
+
+		fmt.Printf(
+			"Listening on port %s for SSH and port %s for HTTP...\n",
+			sshPort,
+			httpPort,
+		)
+
+		go func() {
+			panic(http.ListenAndServe(httpPort, http.FileServer(http.Dir("./static/"))))
+		}()
+
+		// Once a ServerConfig has been configured, connections can be
+		// accepted.
+		listener, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0%s", sshPort))
+		if err != nil {
+			panic("failed to listen for connection")
+		}
+		gm := NewGameManager()
+		for {
+			nConn, err := listener.Accept()
+			if err != nil {
+				panic("failed to accept incoming connection")
+			}
+
+			go handler(nConn, gm, config)
+		}
 	}
 }
