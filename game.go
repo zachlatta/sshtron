@@ -95,8 +95,11 @@ const (
 
 	playerRed     = color.FgRed
 	playerGreen   = color.FgGreen
+	playerYellow  = color.FgYellow
+	playerBlue    = color.FgBlue
 	playerMagenta = color.FgMagenta
 	playerCyan    = color.FgCyan
+	playerWhite   = color.FgWhite
 
 	PlayerUp PlayerDirection = iota
 	PlayerLeft
@@ -104,21 +107,29 @@ const (
 	PlayerRight
 )
 
-var playerColors = []color.Attribute{playerRed, playerGreen, playerMagenta,
-	playerCyan}
+var playerColors = []color.Attribute{
+	playerRed, playerGreen, playerYellow, playerBlue,
+	playerMagenta, playerCyan, playerWhite,
+}
 
 var playerBorderColors = map[color.Attribute]color.Attribute{
 	playerRed:     color.FgHiRed,
 	playerGreen:   color.FgHiGreen,
+	playerYellow:  color.FgHiYellow,
+	playerBlue:    color.FgHiBlue,
 	playerMagenta: color.FgHiMagenta,
 	playerCyan:    color.FgHiCyan,
+	playerWhite:   color.FgHiWhite,
 }
 
 var playerColorNames = map[color.Attribute]string{
 	playerRed:     "Red",
 	playerGreen:   "Green",
+	playerYellow:  "Yellow",
+	playerBlue:    "Blue",
 	playerMagenta: "Magenta",
 	playerCyan:    "Cyan",
+	playerWhite:   "White",
 }
 
 type PlayerTrailSegment struct {
@@ -129,6 +140,7 @@ type PlayerTrailSegment struct {
 type Player struct {
 	s *Session
 
+	Name	  string
 	CreatedAt time.Time
 	Direction PlayerDirection
 	Marker    rune
