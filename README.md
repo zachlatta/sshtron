@@ -16,6 +16,8 @@ There are total 7 colors to choose from: Red, Green, Yellow, Blue, Magenta, Cyan
 
     $ ssh red@sshtron.zachlatta.com
 
+If the color you picked is already taken in all open games, you'll randomly be assigned a color.
+
 ## Running Your Own Copy
 
 Clone the project and `cd` into its directory. These instructions assume that you have your `GOPATH` setup correctly.
