@@ -7,6 +7,7 @@ import (
 	"io"
 	"math/rand"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/dustinkirkland/golang-petname"
@@ -383,51 +384,57 @@ func (gm *GameManager) GameCount() int {
 	return len(gm.Games)
 }
 
-func (gm *GameManager) Run() {
-	for {
-		select {
-		case c := <-gm.HandleChannel:
-			g := gm.getGameWithAvailability()
-			if g == nil {
-				g = NewGame(gameWidth, gameHeight)
-				gm.Games[g.Name] = g
+func (gm *GameManager) HandleNewChannel(c ssh.Channel, color string) {
+	g := gm.getGameWithAvailability()
+	if g == nil {
+		g = NewGame(gameWidth, gameHeight)
+		gm.Games[g.Name] = g
 
-				go g.Run()
-			}
+		go g.Run()
+	}
 
-			session := NewSession(c, g.WorldWidth(), g.WorldHeight(),
-				g.AvailableColors()[0])
-			g.AddSession(session)
+	colorOptions := g.AvailableColors()
+	finalColor := colorOptions[0]
 
-			go func() {
-				reader := bufio.NewReader(c)
-				for {
-					r, _, err := reader.ReadRune()
-					if err != nil {
-						fmt.Println(err)
-						break
-					}
-
-					switch r {
-					case keyW, keyZ, keyK, keyComma:
-						session.Player.HandleUp()
-					case keyA, keyQ, keyH:
-						session.Player.HandleLeft()
-					case keyS, keyJ, keyO:
-						session.Player.HandleDown()
-					case keyD, keyL, keyE:
-						session.Player.HandleRight()
-					case keyCtrlC, keyEscape:
-						if g.SessionCount() == 1 {
-							delete(gm.Games, g.Name)
-						}
-
-						g.RemoveSession(session)
-					}
-				}
-			}()
+	// choose the requested color if available
+	color = strings.ToLower(color)
+	for _, clr := range colorOptions {
+		if strings.ToLower(playerColorNames[clr]) == color {
+			finalColor = clr
+			break
 		}
 	}
+
+	session := NewSession(c, g.WorldWidth(), g.WorldHeight(), finalColor)
+	g.AddSession(session)
+
+	go func() {
+		reader := bufio.NewReader(c)
+		for {
+			r, _, err := reader.ReadRune()
+			if err != nil {
+				fmt.Println(err)
+				break
+			}
+
+			switch r {
+			case keyW, keyZ, keyK, keyComma:
+				session.Player.HandleUp()
+			case keyA, keyQ, keyH:
+				session.Player.HandleLeft()
+			case keyS, keyJ, keyO:
+				session.Player.HandleDown()
+			case keyD, keyL, keyE:
+				session.Player.HandleRight()
+			case keyCtrlC, keyEscape:
+				if g.SessionCount() == 1 {
+					delete(gm.Games, g.Name)
+				}
+
+				g.RemoveSession(session)
+			}
+		}
+	}()
 }
 
 type Game struct {
