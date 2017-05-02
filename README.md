@@ -10,6 +10,12 @@ _Controls: WASD or vim keybindings to move (**do not use your arrow keys**). Esc
 
 **Code quality disclaimer:** _SSHTron was built in ~20 hours at [BrickHack 2](https://brickhack.io/). Here be dragons._
 
+## Want to choose color yourself?
+
+There are total 7 colors to choose from: Red, Green, Yellow, Blue, Magenta, Cyan and White
+
+    $ ssh red@sshtron.zachlatta.com
+
 ## Running Your Own Copy
 
 Clone the project and `cd` into its directory. These instructions assume that you have your `GOPATH` setup correctly.

@@ -7,6 +7,7 @@ import (
 	"io"
 	"math/rand"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/dustinkirkland/golang-petname"
@@ -95,8 +96,11 @@ const (
 
 	playerRed     = color.FgRed
 	playerGreen   = color.FgGreen
+	playerYellow  = color.FgYellow
+	playerBlue    = color.FgBlue
 	playerMagenta = color.FgMagenta
 	playerCyan    = color.FgCyan
+	playerWhite   = color.FgWhite
 
 	PlayerUp PlayerDirection = iota
 	PlayerLeft
@@ -104,21 +108,29 @@ const (
 	PlayerRight
 )
 
-var playerColors = []color.Attribute{playerRed, playerGreen, playerMagenta,
-	playerCyan}
+var playerColors = []color.Attribute{
+	playerRed, playerGreen, playerYellow, playerBlue,
+	playerMagenta, playerCyan, playerWhite,
+}
 
 var playerBorderColors = map[color.Attribute]color.Attribute{
 	playerRed:     color.FgHiRed,
 	playerGreen:   color.FgHiGreen,
+	playerYellow:  color.FgHiYellow,
+	playerBlue:    color.FgHiBlue,
 	playerMagenta: color.FgHiMagenta,
 	playerCyan:    color.FgHiCyan,
+	playerWhite:   color.FgHiWhite,
 }
 
 var playerColorNames = map[color.Attribute]string{
 	playerRed:     "Red",
 	playerGreen:   "Green",
+	playerYellow:  "Yellow",
+	playerBlue:    "Blue",
 	playerMagenta: "Magenta",
 	playerCyan:    "Cyan",
+	playerWhite:   "White",
 }
 
 type PlayerTrailSegment struct {
@@ -129,6 +141,7 @@ type PlayerTrailSegment struct {
 type Player struct {
 	s *Session
 
+	Name	  string
 	CreatedAt time.Time
 	Direction PlayerDirection
 	Marker    rune
@@ -371,51 +384,57 @@ func (gm *GameManager) GameCount() int {
 	return len(gm.Games)
 }
 
-func (gm *GameManager) Run() {
-	for {
-		select {
-		case c := <-gm.HandleChannel:
-			g := gm.getGameWithAvailability()
-			if g == nil {
-				g = NewGame(gameWidth, gameHeight)
-				gm.Games[g.Name] = g
+func (gm *GameManager) HandleNewChannel(c ssh.Channel, color string) {
+	g := gm.getGameWithAvailability()
+	if g == nil {
+		g = NewGame(gameWidth, gameHeight)
+		gm.Games[g.Name] = g
 
-				go g.Run()
-			}
+		go g.Run()
+	}
 
-			session := NewSession(c, g.WorldWidth(), g.WorldHeight(),
-				g.AvailableColors()[0])
-			g.AddSession(session)
+	colorOptions := g.AvailableColors()
+	finalColor := colorOptions[0]
 
-			go func() {
-				reader := bufio.NewReader(c)
-				for {
-					r, _, err := reader.ReadRune()
-					if err != nil {
-						fmt.Println(err)
-						break
-					}
-
-					switch r {
-					case keyW, keyZ, keyK, keyComma:
-						session.Player.HandleUp()
-					case keyA, keyQ, keyH:
-						session.Player.HandleLeft()
-					case keyS, keyJ, keyO:
-						session.Player.HandleDown()
-					case keyD, keyL, keyE:
-						session.Player.HandleRight()
-					case keyCtrlC, keyEscape:
-						if g.SessionCount() == 1 {
-							delete(gm.Games, g.Name)
-						}
-
-						g.RemoveSession(session)
-					}
-				}
-			}()
+	// choose the requested color if available
+	color = strings.ToLower(color)
+	for _, clr := range colorOptions {
+		if strings.ToLower(playerColorNames[clr]) == color {
+			finalColor = clr
+			break
 		}
 	}
+
+	session := NewSession(c, g.WorldWidth(), g.WorldHeight(), finalColor)
+	g.AddSession(session)
+
+	go func() {
+		reader := bufio.NewReader(c)
+		for {
+			r, _, err := reader.ReadRune()
+			if err != nil {
+				fmt.Println(err)
+				break
+			}
+
+			switch r {
+			case keyW, keyZ, keyK, keyComma:
+				session.Player.HandleUp()
+			case keyA, keyQ, keyH:
+				session.Player.HandleLeft()
+			case keyS, keyJ, keyO:
+				session.Player.HandleDown()
+			case keyD, keyL, keyE:
+				session.Player.HandleRight()
+			case keyCtrlC, keyEscape:
+				if g.SessionCount() == 1 {
+					delete(gm.Games, g.Name)
+				}
+
+				g.RemoveSession(session)
+			}
+		}
+	}()
 }
 
 type Game struct {

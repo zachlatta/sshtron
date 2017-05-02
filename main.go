@@ -20,7 +20,7 @@ const (
 func handler(conn net.Conn, gm *GameManager, config *ssh.ServerConfig) {
 	// Before use, a handshake must be performed on the incoming
 	// net.Conn.
-	_, chans, reqs, err := ssh.NewServerConn(conn, config)
+	sshConn, chans, reqs, err := ssh.NewServerConn(conn, config)
 	if err != nil {
 		fmt.Println("Failed to handshake with new client")
 		return
@@ -66,7 +66,7 @@ func handler(conn net.Conn, gm *GameManager, config *ssh.ServerConfig) {
 			}
 		}(requests)
 
-		gm.HandleChannel <- channel
+		gm.HandleNewChannel(channel, sshConn.User())
 	}
 }
 
@@ -102,7 +102,6 @@ func main() {
 
 	// Create the GameManager
 	gm := NewGameManager()
-	go gm.Run()
 
 	fmt.Printf(
 		"Listening on port %s for SSH and port %s for HTTP...\n",
