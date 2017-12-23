@@ -48,20 +48,12 @@
          fjs.parentNode.insertBefore(js, fjs); }(document, 'script',
                                                  'facebook-jssdk'));</script>
     <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
-    <!-- Piwik -->
-    <script type="text/javascript">
-     var _paq = _paq || [];
-     _paq.push(['trackPageView']);
-     _paq.push(['enableLinkTracking']);
-     (function() {
-         var u="//maxsshtron.piwikpro.com/";
-         _paq.push(['setTrackerUrl', u+'piwik.php']);
-         _paq.push(['setSiteId', 1]);
-         var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
-         g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
-     })();
+    <!-- Segment -->
+    <script>
+      !function(){var analytics=window.analytics=window.analytics||[];if(!analytics.initialize)if(analytics.invoked)window.console&&console.error&&console.error("Segment snippet included twice.");else{analytics.invoked=!0;analytics.methods=["trackSubmit","trackClick","trackLink","trackForm","pageview","identify","reset","group","track","ready","alias","debug","page","once","off","on"];analytics.factory=function(t){return function(){var e=Array.prototype.slice.call(arguments);e.unshift(t);analytics.push(e);return analytics}};for(var t=0;t<analytics.methods.length;t++){var e=analytics.methods[t];analytics[e]=analytics.factory(e)}analytics.load=function(t){var e=document.createElement("script");e.type="text/javascript";e.async=!0;e.src=("https:"===document.location.protocol?"https://":"http://")+"cdn.segment.com/analytics.js/v1/"+t+"/analytics.min.js";var n=document.getElementsByTagName("script")[0];n.parentNode.insertBefore(e,n)};analytics.SNIPPET_VERSION="4.0.0";
+      analytics.load("pRYYOcXEHeMZtd3oazxcqAmipRo4wWgb");
+      analytics.page();
+      }}();
     </script>
-    <noscript><p><img src="//maxsshtron.piwikpro.com/piwik.php?idsite=1" style="border:0;" alt="" /></p></noscript>
-    <!-- End Piwik Code -->
 </body>
 </html>
