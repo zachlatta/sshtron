@@ -141,14 +141,15 @@ type PlayerTrailSegment struct {
 type Player struct {
 	s *Session
 
-	Name	  string
+	Name      string
 	CreatedAt time.Time
 	Direction PlayerDirection
 	Marker    rune
 	Color     color.Attribute
 	Pos       *Position
 
-	Trail []PlayerTrailSegment
+	Trail     []PlayerTrailSegment
+	WinStreak []color.Attribute
 
 	score float64
 }
@@ -624,10 +625,17 @@ func (g *Game) worldString(s *Session) string {
 		pos := player.Pos
 		strWorld[pos.RoundX()+1][pos.RoundY()+1] = colorizer(string(player.Marker))
 
+        // Make the rainbow of trail colors to cycle over
+		trailColorizers := make([](func(...interface{}) string), len(player.WinStreak)+1)
+		trailColorizers[0] = colorizer
+		for i, winColor := range player.WinStreak {
+			trailColorizers[i+1] = color.New(winColor).SprintFunc()
+		}
+
 		// Load the player's trail into the rune slice
-		for _, segment := range player.Trail {
+		for i, segment := range player.Trail {
 			x, y := segment.Pos.RoundX()+1, segment.Pos.RoundY()+1
-			strWorld[x][y] = colorizer(string(segment.Marker))
+			strWorld[x][y] = trailColorizers[i%len(trailColorizers)](string(segment.Marker))
 		}
 	}
 
@@ -717,7 +725,7 @@ func (g *Game) Run() {
 func (g *Game) Update(delta float64) {
 	// We'll use this to make a set of all of the coordinates that are occupied by
 	// trails
-	trailCoordMap := make(map[string]bool)
+	trailCoordMap := make(map[string]*Player)
 
 	// Update player data
 	for player, session := range g.players() {
@@ -749,14 +757,15 @@ func (g *Game) Update(delta float64) {
 
 		for _, seg := range player.Trail {
 			coordStr := fmt.Sprintf("%d,%d", seg.Pos.RoundX(), seg.Pos.RoundY())
-			trailCoordMap[coordStr] = true
+			trailCoordMap[coordStr] = player
 		}
 	}
 
 	// Check if any players collide with a trail and restart them if so
 	for player, session := range g.players() {
 		playerPos := fmt.Sprintf("%d,%d", player.Pos.RoundX(), player.Pos.RoundY())
-		if collided := trailCoordMap[playerPos]; collided {
+		if otherPlayer, collided := trailCoordMap[playerPos]; collided {
+			otherPlayer.WinStreak = append(otherPlayer.WinStreak, player.Color)
 			session.StartOver(g.WorldWidth(), g.WorldHeight())
 		}
 	}
