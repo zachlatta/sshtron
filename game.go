@@ -625,7 +625,7 @@ func (g *Game) worldString(s *Session) string {
 		pos := player.Pos
 		strWorld[pos.RoundX()+1][pos.RoundY()+1] = colorizer(string(player.Marker))
 
-        // Make the rainbow of trail colors to cycle over
+                // Make the rainbow of trail colors to cycle over
 		trailColorizers := make([](func(...interface{}) string), len(player.WinStreak)+1)
 		trailColorizers[0] = colorizer
 		for i, winColor := range player.WinStreak {
