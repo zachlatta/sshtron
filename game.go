@@ -136,12 +136,13 @@ var playerColorNames = map[color.Attribute]string{
 type PlayerTrailSegment struct {
 	Marker rune
 	Pos    Position
+	Color  color.Attribute
 }
 
 type Player struct {
 	s *Session
 
-	Name	  string
+	Name      string
 	CreatedAt time.Time
 	Direction PlayerDirection
 	Marker    rune
@@ -177,7 +178,7 @@ func NewPlayer(s *Session, worldWidth, worldHeight int,
 }
 
 func (p *Player) addTrailSegment(pos Position, marker rune) {
-	segment := PlayerTrailSegment{marker, pos}
+	segment := PlayerTrailSegment{marker, pos, p.Color}
 	p.Trail = append([]PlayerTrailSegment{segment}, p.Trail...)
 }
 
@@ -619,14 +620,15 @@ func (g *Game) worldString(s *Session) string {
 
 	// Load the players into the rune slice
 	for player := range g.players() {
-		colorizer := color.New(player.Color).SprintFunc()
 
 		pos := player.Pos
+		colorizer := color.New(player.Color).SprintFunc()
 		strWorld[pos.RoundX()+1][pos.RoundY()+1] = colorizer(string(player.Marker))
 
 		// Load the player's trail into the rune slice
 		for _, segment := range player.Trail {
 			x, y := segment.Pos.RoundX()+1, segment.Pos.RoundY()+1
+			colorizer := color.New(segment.Color).SprintFunc()
 			strWorld[x][y] = colorizer(string(segment.Marker))
 		}
 	}
@@ -717,7 +719,7 @@ func (g *Game) Run() {
 func (g *Game) Update(delta float64) {
 	// We'll use this to make a set of all of the coordinates that are occupied by
 	// trails
-	trailCoordMap := make(map[string]bool)
+	trailCoordMap := make(map[string]*PlayerTrailSegment)
 
 	// Update player data
 	for player, session := range g.players() {
@@ -747,16 +749,21 @@ func (g *Game) Update(delta float64) {
 			return
 		}
 
-		for _, seg := range player.Trail {
+		// range gives copies, but we need a reference in the trailCoordMap so we
+		// can modify the Color value if there is a collision, so iterate by index
+		// instead.
+		for i := range player.Trail {
+			seg := &player.Trail[i]
 			coordStr := fmt.Sprintf("%d,%d", seg.Pos.RoundX(), seg.Pos.RoundY())
-			trailCoordMap[coordStr] = true
+			trailCoordMap[coordStr] = seg
 		}
 	}
 
 	// Check if any players collide with a trail and restart them if so
 	for player, session := range g.players() {
 		playerPos := fmt.Sprintf("%d,%d", player.Pos.RoundX(), player.Pos.RoundY())
-		if collided := trailCoordMap[playerPos]; collided {
+		if segment, collided := trailCoordMap[playerPos]; collided {
+			segment.Color = player.Color
 			session.StartOver(g.WorldWidth(), g.WorldHeight())
 		}
 	}
