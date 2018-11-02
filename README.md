@@ -47,7 +47,7 @@ $ docker build -t sshtron .
 $ docker run -t -d -p 2022:2022 --restart always --name sshtron sshtron
 ```
 
-For Raspberry Pi, change the base image in `Dockerfile` from `golang:latest` to `apicht/rpi-golang:latest`.
+For Raspberry Pi, change the base image in `Dockerfile` from `golang:latest` to `resin/raspberry-pi-golang:latest`.
 
 ## CVE-2016-0777
 
