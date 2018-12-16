@@ -1,4 +1,4 @@
-# ![SSHTron](https://cdn.rawgit.com/zachlatta/sshtron/master/logo.svg)
+# ![SSHTron](https://cdn.combinatronics.com/zachlatta/sshtron/master/logo.svg)
 
 SSHTron is a multiplayer lightcycle game that runs through SSH. Just run the command below and you'll be playing in seconds:
 
