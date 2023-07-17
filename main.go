@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"golang.org/x/crypto/ssh"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -88,7 +87,7 @@ func main() {
 		NoClientAuth: true,
 	}
 
-	privateBytes, err := ioutil.ReadFile("id_rsa")
+	privateBytes, err := os.ReadFile("id_rsa")
 	if err != nil {
 		panic("Failed to load private key")
 	}
