@@ -474,7 +474,7 @@ func (g *Game) initalizeLevel(width, height int) {
 }
 
 func (g *Game) setTileType(pos Position, tileType TileType) error {
-	outOfBoundsErr := "The given %s value (%s) is out of bounds"
+	outOfBoundsErr := "The given %s value (%f) is out of bounds"
 	if pos.RoundX() > len(g.level) || pos.RoundX() < 0 {
 		return fmt.Errorf(outOfBoundsErr, "X", pos.X)
 	} else if pos.RoundY() > len(g.level[pos.RoundX()]) || pos.RoundY() < 0 {
