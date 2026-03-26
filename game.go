@@ -45,7 +45,7 @@ func (h *Hub) Run(g *Game) {
 			h.Sessions[s] = struct{}{}
 		case s := <-h.Unregister:
 			if _, ok := h.Sessions[s]; ok {
-				fmt.Fprint(s, "\r\n\r\n~ End of Line ~ \r\n\r\nRemember to use WASD to move!\r\n\r\n")
+				fmt.Fprint(s, "\r\n\r\n ~ Bye! ~ \r\n\r\n")
 
 				// Unhide the cursor
 				fmt.Fprint(s, "\033[?25h")
@@ -77,18 +77,26 @@ func (p Position) RoundY() int {
 type PlayerDirection int
 
 const (
-	verticalPlayerSpeed        = 0.007
-	horizontalPlayerSpeed      = 0.01
+	speedMultiplier            = 1
+	verticalPlayerSpeed        = 0.007 * speedMultiplier
+	horizontalPlayerSpeed      = 0.01 * speedMultiplier
 	playerCountScoreMultiplier = 1.25
 	playerTimeout              = 15 * time.Second
 
-	playerUpRune    = '⇡'
-	playerLeftRune  = '⇠'
-	playerDownRune  = '⇣'
-	playerRightRune = '⇢'
+	//playerUpRune    = '⇡'
+	//playerLeftRune  = '⇠'
+	//playerDownRune  = '⇣'
+	//playerRightRune = '⇢'
+	playerUpRune    = '↑'
+	playerLeftRune  = '←'
+	playerDownRune  = '↓'
+	playerRightRune = '→'
 
-	playerTrailHorizontal      = '┄'
-	playerTrailVertical        = '┆'
+	//playerTrailHorizontal      = '╌'
+	//playerTrailVertical        = '┆'
+	playerTrailHorizontal      = '─'
+	playerTrailVertical        = '│'
+
 	playerTrailLeftCornerUp    = '╭'
 	playerTrailLeftCornerDown  = '╰'
 	playerTrailRightCornerDown = '╯'
@@ -145,6 +153,7 @@ type Player struct {
 	Name      string
 	CreatedAt time.Time
 	Direction PlayerDirection
+	InitDir   PlayerDirection
 	Marker    rune
 	Color     color.Attribute
 	Pos       *Position
@@ -172,6 +181,7 @@ func NewPlayer(s *Session, worldWidth, worldHeight int,
 		CreatedAt: time.Now(),
 		Marker:    playerDownRune,
 		Direction: PlayerDown,
+		InitDir:   PlayerDown,
 		Color:     color,
 		Pos:       &Position{startX, startY},
 	}
@@ -192,38 +202,34 @@ func (p *Player) calculateScore(delta float64, playerCount int) float64 {
 }
 
 func (p *Player) HandleUp() {
-	if p.Direction == PlayerDown {
+	if p.InitDir == PlayerDown {
 		return
 	}
 	p.Direction = PlayerUp
-	p.Marker = playerUpRune
 	p.s.didAction()
 }
 
 func (p *Player) HandleLeft() {
-	if p.Direction == PlayerRight {
+	if p.InitDir == PlayerRight {
 		return
 	}
 	p.Direction = PlayerLeft
-	p.Marker = playerLeftRune
 	p.s.didAction()
 }
 
 func (p *Player) HandleDown() {
-	if p.Direction == PlayerUp {
+	if p.InitDir == PlayerUp {
 		return
 	}
 	p.Direction = PlayerDown
-	p.Marker = playerDownRune
 	p.s.didAction()
 }
 
 func (p *Player) HandleRight() {
-	if p.Direction == PlayerLeft {
+	if p.InitDir == PlayerLeft {
 		return
 	}
 	p.Direction = PlayerRight
-	p.Marker = playerRightRune
 	p.s.didAction()
 }
 
@@ -249,6 +255,21 @@ func (p *Player) Update(g *Game, delta float64) {
 
 	// If we moved, add a trail segment.
 	if endX != startX || endY != startY {
+		// Update initial direction
+		// Needed to prevent players from doing a 180 in one frame
+		p.InitDir = p.Direction
+		// Update player direction only after a new frame
+		switch p.InitDir {
+			case PlayerUp:
+				p.Marker = playerUpRune
+			case PlayerLeft:
+				p.Marker = playerLeftRune
+			case PlayerDown:
+				p.Marker = playerDownRune
+			case PlayerRight:
+				p.Marker = playerRightRune
+		}
+
 		var lastSeg *PlayerTrailSegment
 		var lastSegX, lastSegY int
 		if len(p.Trail) > 0 {
@@ -320,7 +341,7 @@ type Tile struct {
 }
 
 const (
-	gameWidth  = 78
+	gameWidth  = 82
 	gameHeight = 22
 
 	keyW = 'w'
@@ -336,6 +357,12 @@ const (
 	keyJ = 'j'
 	keyK = 'k'
 	keyL = 'l'
+
+    // https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797#list-of-keyboard-strings
+	keyUp    = 'A'
+	keyDown  = 'B'
+	keyRight = 'C'
+	keyLeft  = 'D'
 
 	keyComma = ','
 	keyO     = 'o'
@@ -417,15 +444,34 @@ func (gm *GameManager) HandleNewChannel(c ssh.Channel, color string) {
 				fmt.Println(err)
 				break
 			}
+			if r == keyEscape {
+				has_more := reader.Buffered()
+				// not just escape
+				if has_more > 0 {
+					r1, _, err := reader.ReadRune()
+					if err != nil {
+						fmt.Println(err)
+						break
+					}
+					// Then goes arrow key
+					if r1 == '[' {
+						r, _, err = reader.ReadRune()
+						if err != nil {
+							fmt.Println(err)
+							break
+						}
+					}
+				}
+			}
 
 			switch r {
-			case keyW, keyZ, keyK, keyComma:
+			case keyUp, keyW, keyZ, keyK, keyComma:
 				session.Player.HandleUp()
-			case keyA, keyQ, keyH:
+			case keyLeft, keyA, keyQ, keyH:
 				session.Player.HandleLeft()
-			case keyS, keyJ, keyO:
+			case keyDown, keyS, keyJ, keyO:
 				session.Player.HandleDown()
-			case keyD, keyL, keyE:
+			case keyRight, keyD, keyL, keyE:
 				session.Player.HandleRight()
 			case keyCtrlC, keyEscape:
 				if g.SessionCount() == 1 {

@@ -4,7 +4,7 @@ SSHTron is a multiplayer lightcycle game that runs through SSH. Just run the com
 
     $ ssh sshtron.zachlatta.com
 
-_Controls: WASD or vim keybindings to move (**do not use your arrow keys**). Escape or Ctrl+C to exit._
+_Controls: WASD, arrow keys or vim keybindings to move. Escape or Ctrl+C to exit._
 
 ![Demo](static/img/gameplay.gif)
 
