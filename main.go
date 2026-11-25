@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"github.com/fatih/color"
 )
 
 const (
@@ -18,6 +19,8 @@ const (
 )
 
 func handler(conn net.Conn, gm *GameManager, config *ssh.ServerConfig) {
+	color.NoColor = false
+
 	// Before use, a handshake must be performed on the incoming
 	// net.Conn.
 	sshConn, chans, reqs, err := ssh.NewServerConn(conn, config)
